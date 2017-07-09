@@ -12,3 +12,13 @@
     * pycryptodome 3.4.6+
 * Windows(32位/64位)
     * Windows XP及以上
+* Linux
+    * python3-tk
+    
+## 使用方法
+
+```bash
+python3 CryptoApp.pyw
+```
+
+输入要转换的文字和密码，点击转换按钮，转换明文和密文。
