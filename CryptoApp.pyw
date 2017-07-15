@@ -4,7 +4,7 @@ import MainWindow
 
 def main():
     application = tk.Tk()
-    application.title("加密解密器")
+    application.title("CF加密解密器")
     MainWindow.Window(application)
     application.mainloop()
 
