@@ -95,10 +95,14 @@ class Window(ttk.Frame):
     def file_to_choose(self):
         file_path = filedialog.askdirectory()
         file_name = self.textFromEntry.get()
-        file_path = file_path if file_path[-1] == "/" else file_path + "/"
-        file_path += file_name[file_name.rindex("/")+1:] + ".rename"
         self.textToEntry.delete(0, len(self.textToEntry.get()))
-        self.textToEntry.insert(0, file_path)
+        if file_path:
+            file_path = file_path if file_path[-1] == "/" else file_path + "/"
+            if file_name:
+                file_path += file_name[file_name.rindex("/") + 1:] + ".rename"
+            else:
+                file_path += "newfile"
+            self.textToEntry.insert(0, file_path)
 
     # 执行加密或者解密
     def converter(self):
