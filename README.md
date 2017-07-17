@@ -20,4 +20,4 @@
 ```bash
 python3 CryptoApp.pyw
 ```
-可以加密字符串或者文件
+支持加密字符串、文件、文件夹。

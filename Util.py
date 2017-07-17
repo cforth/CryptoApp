@@ -1,8 +1,7 @@
 import logging
 import tkinter.messagebox as tkmessagebox
 import threading
-from libs.CFCrypto import StringCrypto
-from libs.CFCrypto import FileCrypto
+from libs.CFCrypto import *
 
 
 def set_combobox_item(combobox, text, fuzzy=False):
@@ -35,15 +34,38 @@ def text_decrypt(cipher_text, password):
     return ""
 
 
-def file_encrypt(file_path, output_file_path, password):
-    my_crypto = FileCrypto(password)
-    my_crypto.encrypt(file_path, output_file_path)
+def file_encrypt(file_path, output_dir_path, password):
+    f_crypto = FileCrypto(password)
+    input_file_name = os.path.split(file_path)[1]
+    f_crypto.encrypt(file_path, os.path.join(output_dir_path, StringCrypto(password).encrypt(input_file_name)))
 
 
-def file_decrypt(file_path, output_file_path, password):
-    my_crypto = FileCrypto(password)
+def file_decrypt(file_path, output_dir_path, password):
+    f_crypto = FileCrypto(password)
+    input_file_name = os.path.split(file_path)[1]
     try:
-        my_crypto.decrypt(file_path, output_file_path)
+        f_crypto.decrypt(file_path, os.path.join(output_dir_path, StringCrypto(password).decrypt(input_file_name)))
+    except Exception as e:
+        logging.warning("Convert error: ", e)
+        tkmessagebox.showerror("错误", "输入文件格式或者密码错误！")
+    return ""
+
+
+def dir_encrypt(dir_path, output_dir_path, password):
+    dir_crypto = DirFileCrypto(password)
+    name_crypto = DirNameCrypto(password)
+    input_dir_name = os.path.split(dir_path)[1] if not dir_path.endswith('/') else os.path.split(dir_path[:-1])[1]
+    dir_crypto.encrypt(dir_path, output_dir_path)
+    name_crypto.encrypt(os.path.join(output_dir_path, input_dir_name))
+
+
+def dir_decrypt(dir_path, output_dir_path, password):
+    dir_crypto = DirFileCrypto(password)
+    name_crypto = DirNameCrypto(password)
+    input_dir_name = os.path.split(dir_path)[1] if not dir_path.endswith('/') else os.path.split(dir_path[:-1])[1]
+    try:
+        dir_crypto.decrypt(dir_path, output_dir_path)
+        name_crypto.decrypt(os.path.join(output_dir_path, input_dir_name))
     except Exception as e:
         logging.warning("Convert error: ", e)
         tkmessagebox.showerror("错误", "输入文件格式或者密码错误！")
@@ -51,15 +73,30 @@ def file_decrypt(file_path, output_file_path, password):
 
 
 class FileHandle(threading.Thread):
-    def __init__(self, mode, file_path, output_file_path, password):
+    def __init__(self, mode, file_path, output_dir_path, password):
         threading.Thread.__init__(self)
         self.mode = mode
         self.file_path = file_path
-        self.output_file_path = output_file_path
+        self.output_dir_path = output_dir_path
         self.password = password
 
     def run(self):
         if self.mode == "encrypt":
-            file_encrypt(self.file_path, self.output_file_path, self.password)
+            file_encrypt(self.file_path, self.output_dir_path, self.password)
         elif self.mode == "decrypt":
-            file_decrypt(self.file_path, self.output_file_path, self.password)
+            file_decrypt(self.file_path, self.output_dir_path, self.password)
+
+
+class DirHandle(threading.Thread):
+    def __init__(self, mode, dir_path, output_dir_path, password):
+        threading.Thread.__init__(self)
+        self.mode = mode
+        self.dir_path = dir_path
+        self.output_dir_path = output_dir_path
+        self.password = password
+
+    def run(self):
+        if self.mode == "encrypt":
+            dir_encrypt(self.dir_path, self.output_dir_path, self.password)
+        elif self.mode == "decrypt":
+            dir_decrypt(self.dir_path, self.output_dir_path, self.password)

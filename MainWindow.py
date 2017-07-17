@@ -28,8 +28,8 @@ class Window(ttk.Frame):
         self.textFromEntry = ttk.Entry(self, width=100)
         self.textToLabel = ttk.Label(self, text="输出:")
         self.textToEntry = ttk.Entry(self, width=100)
-        self.fileFromChooseButton = ttk.Button(self, text="选择文件",  state="disable", command=self.file_from_choose)
-        self.fileToChooseButton = ttk.Button(self, text="选择文件",  state="disable", command=self.file_to_choose)
+        self.fileFromChooseButton = ttk.Button(self, text="选择文件/文件夹",  state="disable", command=self.file_from_choose)
+        self.fileToChooseButton = ttk.Button(self, text="选择文件夹",  state="disable", command=self.file_to_choose)
         self.button = ttk.Button(self, text="执行", command=self.converter)
         self.populate_comboboxes()
 
@@ -65,7 +65,7 @@ class Window(ttk.Frame):
         self.cryptOptionCombobox.state(('readonly',))
         self.dataOptionCombobox.state(('readonly',))
         self.cryptOptionCombobox.config(values=["加密", "解密"])
-        self.dataOptionCombobox.config(values=["字符串", "文件"])
+        self.dataOptionCombobox.config(values=["字符串", "文件", "文件夹"])
         set_combobox_item(self.cryptOptionCombobox, "加密", True)
         set_combobox_item(self.dataOptionCombobox, "字符串", True)
 
@@ -74,7 +74,7 @@ class Window(ttk.Frame):
         if self.dataOption.get() == "字符串":
             self.fileFromChooseButton["state"] = "disable"
             self.fileToChooseButton["state"] = "disable"
-        elif self.dataOption.get() == "文件":
+        elif self.dataOption.get() == "文件" or self.dataOption.get() == "文件夹":
             self.fileFromChooseButton["state"] = "normal"
             self.fileToChooseButton["state"] = "normal"
 
@@ -85,24 +85,21 @@ class Window(ttk.Frame):
         else:
             self.passwordEntry["show"] = "*"
 
-    # 文件输入选择
+    # 文件/文件夹输入选择
     def file_from_choose(self):
-        file_path = filedialog.askopenfilename()
+        file_path = ""
+        if self.dataOption.get() == "文件":
+            file_path = filedialog.askopenfilename()
+        elif self.dataOption.get() == "文件夹":
+            file_path = filedialog.askdirectory()
         self.textFromEntry.delete(0, len(self.textFromEntry.get()))
         self.textFromEntry.insert(0, file_path)
 
-    # 文件输出选择
+    # 文件夹输出选择
     def file_to_choose(self):
         file_path = filedialog.askdirectory()
-        file_name = self.textFromEntry.get()
         self.textToEntry.delete(0, len(self.textToEntry.get()))
-        if file_path:
-            file_path = file_path if file_path[-1] == "/" else file_path + "/"
-            if file_name:
-                file_path += file_name[file_name.rindex("/") + 1:] + ".rename"
-            else:
-                file_path += "newfile"
-            self.textToEntry.insert(0, file_path)
+        self.textToEntry.insert(0, file_path)
 
     # 执行加密或者解密
     def converter(self):
@@ -130,5 +127,15 @@ class Window(ttk.Frame):
                     FileHandle("encrypt", input_text, output_text, password).start()
                 elif crypto_option == "解密":
                     FileHandle("decrypt", input_text, output_text, password).start()
+                else:
+                    return
+
+        elif data_option == "文件夹":
+            if validate("密码", password) \
+                    and validate("输入", input_text) and validate("输出", output_text):
+                if crypto_option == "加密":
+                    DirHandle("encrypt", input_text, output_text, password).start()
+                elif crypto_option == "解密":
+                    DirHandle("decrypt", input_text, output_text, password).start()
                 else:
                     return
