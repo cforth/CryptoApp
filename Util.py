@@ -73,30 +73,38 @@ def dir_decrypt(dir_path, output_dir_path, password):
 
 
 class FileHandle(threading.Thread):
-    def __init__(self, mode, file_path, output_dir_path, password):
+    def __init__(self, main_window, mode, file_path, output_dir_path, password):
         threading.Thread.__init__(self)
+        self.main_window = main_window
         self.mode = mode
         self.file_path = file_path
         self.output_dir_path = output_dir_path
         self.password = password
 
     def run(self):
+        # 发送消息给主窗口，禁用按钮
+        self.main_window.event_generate("<<DisableCrypto>>", when="tail")
         if self.mode == "encrypt":
             file_encrypt(self.file_path, self.output_dir_path, self.password)
         elif self.mode == "decrypt":
             file_decrypt(self.file_path, self.output_dir_path, self.password)
+        self.main_window.event_generate("<<AllowCrypto>>", when="tail")
 
 
 class DirHandle(threading.Thread):
-    def __init__(self, mode, dir_path, output_dir_path, password):
+    def __init__(self, main_window, mode, dir_path, output_dir_path, password):
         threading.Thread.__init__(self)
+        self.main_window = main_window
         self.mode = mode
         self.dir_path = dir_path
         self.output_dir_path = output_dir_path
         self.password = password
 
     def run(self):
+        # 发送消息给主窗口，禁用按钮
+        self.main_window.event_generate("<<DisableCrypto>>", when="tail")
         if self.mode == "encrypt":
             dir_encrypt(self.dir_path, self.output_dir_path, self.password)
         elif self.mode == "decrypt":
             dir_decrypt(self.dir_path, self.output_dir_path, self.password)
+        self.main_window.event_generate("<<AllowCrypto>>", when="tail")

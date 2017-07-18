@@ -28,8 +28,8 @@ class Window(ttk.Frame):
         self.textFromEntry = ttk.Entry(self, width=100)
         self.textToLabel = ttk.Label(self, text="输出:")
         self.textToEntry = ttk.Entry(self, width=100)
-        self.fileFromChooseButton = ttk.Button(self, text="选择文件/文件夹",  state="disable", command=self.file_from_choose)
-        self.fileToChooseButton = ttk.Button(self, text="选择文件夹",  state="disable", command=self.file_to_choose)
+        self.fileFromChooseButton = ttk.Button(self, text="选择文件/文件夹", state="disable", command=self.file_from_choose)
+        self.fileToChooseButton = ttk.Button(self, text="选择文件夹", state="disable", command=self.file_to_choose)
         self.button = ttk.Button(self, text="执行", command=self.converter)
         self.populate_comboboxes()
 
@@ -59,6 +59,9 @@ class Window(ttk.Frame):
     # 绑定事件
     def create_bindings(self):
         self.dataOptionCombobox.bind("<<ComboboxSelected>>", self.data_choose_event)
+        # 绑定自定义事件给主窗口
+        self.bind("<<DisableCrypto>>", self.disable_crypto_button)
+        self.bind("<<AllowCrypto>>", self.allow_crypto_button)
 
     # 填充下拉列表选项
     def populate_comboboxes(self):
@@ -68,6 +71,16 @@ class Window(ttk.Frame):
         self.dataOptionCombobox.config(values=["字符串", "文件", "文件夹"])
         set_combobox_item(self.cryptOptionCombobox, "加密", True)
         set_combobox_item(self.dataOptionCombobox, "字符串", True)
+
+    # 禁用加密解密按钮
+    def disable_crypto_button(self, event=None):
+        self.button["state"] = "disable"
+        self.button["text"] = "处理中"
+
+    # 启用加密解密按钮
+    def allow_crypto_button(self, event=None):
+        self.button["state"] = "normal"
+        self.button["text"] = "执行"
 
     # 设置文件选择按钮是否可用
     def data_choose_event(self, event=None):
@@ -124,9 +137,9 @@ class Window(ttk.Frame):
                     and validate("输入", input_text) and validate("输出", output_text):
                 # 为了不阻塞窗口主程序，使用多线程加密或解密文件
                 if crypto_option == "加密":
-                    FileHandle("encrypt", input_text, output_text, password).start()
+                    FileHandle(self, "encrypt", input_text, output_text, password).start()
                 elif crypto_option == "解密":
-                    FileHandle("decrypt", input_text, output_text, password).start()
+                    FileHandle(self, "decrypt", input_text, output_text, password).start()
                 else:
                     return
 
@@ -134,8 +147,8 @@ class Window(ttk.Frame):
             if validate("密码", password) \
                     and validate("输入", input_text) and validate("输出", output_text):
                 if crypto_option == "加密":
-                    DirHandle("encrypt", input_text, output_text, password).start()
+                    DirHandle(self, "encrypt", input_text, output_text, password).start()
                 elif crypto_option == "解密":
-                    DirHandle("decrypt", input_text, output_text, password).start()
+                    DirHandle(self, "decrypt", input_text, output_text, password).start()
                 else:
                     return
