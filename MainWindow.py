@@ -31,6 +31,8 @@ class Window(ttk.Frame):
         self.fileFromChooseButton = ttk.Button(self, text="选择文件/文件夹", state="disable", command=self.file_from_choose)
         self.fileToChooseButton = ttk.Button(self, text="选择文件夹", state="disable", command=self.file_to_choose)
         self.button = ttk.Button(self, text="执行", command=self.converter)
+        # 进度条
+        self.progressBar = ttk.Progressbar(self, orient='horizontal', mode='determinate', value=0)
         self.populate_comboboxes()
 
     # 将控件布局
@@ -48,6 +50,7 @@ class Window(ttk.Frame):
         self.textToEntry.grid(row=2, column=2, **pad_w_e)
         self.fileFromChooseButton.grid(row=1, column=3, **pad_w_e)
         self.fileToChooseButton.grid(row=2, column=3, **pad_w_e)
+        self.progressBar.grid(row=3, column=0, columnspan=4, **pad_w_e)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
@@ -72,13 +75,17 @@ class Window(ttk.Frame):
         set_combobox_item(self.cryptOptionCombobox, "加密", True)
         set_combobox_item(self.dataOptionCombobox, "字符串", True)
 
-    # 禁用加密解密按钮
+    # 禁用加密解密按钮，开启进度条
     def disable_crypto_button(self, event=None):
+        # 进度条显示
+        self.progressBar.start()
         self.button["state"] = "disable"
         self.button["text"] = "处理中"
 
-    # 启用加密解密按钮
+    # 启用加密解密按钮，关闭进度条
     def allow_crypto_button(self, event=None):
+        # 进度条停止
+        self.progressBar.stop()
         self.button["state"] = "normal"
         self.button["text"] = "执行"
 
