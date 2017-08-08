@@ -14,9 +14,13 @@ def set_combobox_item(combobox, text, fuzzy=False):
 
 def validate(title, string):
     if not string:
-        tkmessagebox.showerror("错误", title + "为空！")
+        tkmessagebox.showerror("错误", title + " 为空！")
         return False
     return True
+
+
+def path_error_msg(file_path):
+    tkmessagebox.showerror("错误", file_path + " 路径错误！")
 
 
 def text_encrypt(plain_text, password):

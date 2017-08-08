@@ -142,20 +142,26 @@ class Window(ttk.Frame):
         elif data_option == "文件":
             if validate("密码", password) \
                     and validate("输入", input_text) and validate("输出", output_text):
-                # 为了不阻塞窗口主程序，使用多线程加密或解密文件
-                if crypto_option == "加密":
-                    FileHandle(self, "encrypt", input_text, output_text, password).start()
-                elif crypto_option == "解密":
-                    FileHandle(self, "decrypt", input_text, output_text, password).start()
+                if os.path.exists(input_text):
+                    # 为了不阻塞窗口主程序，使用多线程加密或解密文件
+                    if crypto_option == "加密":
+                        FileHandle(self, "encrypt", input_text, output_text, password).start()
+                    elif crypto_option == "解密":
+                        FileHandle(self, "decrypt", input_text, output_text, password).start()
+                    else:
+                        return
                 else:
-                    return
+                    path_error_msg(input_text)
 
         elif data_option == "文件夹":
             if validate("密码", password) \
                     and validate("输入", input_text) and validate("输出", output_text):
-                if crypto_option == "加密":
-                    DirHandle(self, "encrypt", input_text, output_text, password).start()
-                elif crypto_option == "解密":
-                    DirHandle(self, "decrypt", input_text, output_text, password).start()
+                if os.path.exists(input_text):
+                    if crypto_option == "加密":
+                        DirHandle(self, "encrypt", input_text, output_text, password).start()
+                    elif crypto_option == "解密":
+                        DirHandle(self, "decrypt", input_text, output_text, password).start()
+                    else:
+                        return
                 else:
-                    return
+                    path_error_msg(input_text)
