@@ -21,3 +21,6 @@
 python3 CryptoApp.pyw
 ```
 支持加密字符串、文件、文件夹。
+
+## TODO
+加密预览、解密预览
