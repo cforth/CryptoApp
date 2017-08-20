@@ -34,8 +34,7 @@ def text_decrypt(cipher_text, password):
         return string_crypt.decrypt(cipher_text)
     except Exception as e:
         logging.warning("Convert error: ", e)
-        tkmessagebox.showerror("错误", "输入格式或者密码错误！")
-    return ""
+    return "输入格式或者密码错误！"
 
 
 def file_encrypt(file_path, output_dir_path, password):

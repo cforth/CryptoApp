@@ -121,6 +121,7 @@ class Window(ttk.Frame):
         if self.cryptOption.get() == "加密" or self.cryptOption.get() == "解密":
             self.textToEntry["state"] = "normal"
         elif self.cryptOption.get() == "加密预览" or self.cryptOption.get() == "解密预览":
+            self.textToEntry.delete(0, len(self.textToEntry.get()))
             self.textToEntry["state"] = "disable"
 
     # 显示或隐藏密码
