@@ -50,7 +50,6 @@ class Window(ttk.Frame):
         self.tree.heading("d", text="类型")
         self.tree.heading("e", text="大小")
 
-
     # 将控件布局
     def create_layout(self):
         pad_w_e = dict(sticky=(tk.W, tk.E), padx="0.5m", pady="0.5m")
@@ -68,6 +67,7 @@ class Window(ttk.Frame):
         self.fileToChooseButton.grid(row=2, column=3, **pad_w_e)
         self.progressBar.grid(row=3, column=0, columnspan=4, **pad_w_e)
         self.tree.grid(row=4, column=0, columnspan=4, **pad_w_e)
+        self.vbar.grid(row=4, column=5, sticky=(tk.N, tk.S))
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
@@ -155,7 +155,8 @@ class Window(ttk.Frame):
             f_path = os.path.realpath(os.path.join(dir_path, sub_files[i]))
             f_mtime = os.path.getmtime(f_path)
             f_date = datetime.datetime.fromtimestamp(f_mtime).strftime('%Y/%m/%d %H:%M:%S')
-            f_type = "文件夹" if os.path.isdir(f_path) else "文件"
+            _, f_ext = os.path.splitext(f_name)
+            f_type = "文件夹" if os.path.isdir(f_path) else f_ext[1:]+"文件"
             f_size = os.path.getsize(f_path)
             f_kb_size = str(math.ceil(f_size/1024)) + "KB" if f_type != "文件夹" else ""
             self.tree.insert("", "end", values=(i+1, f_name, f_date, f_type, f_kb_size))
