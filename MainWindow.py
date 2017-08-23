@@ -1,7 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.filedialog as filedialog
-import datetime, math
 from Util import *
 
 
@@ -36,19 +35,12 @@ class Window(ttk.Frame):
         # 进度条
         self.progressBar = ttk.Progressbar(self, orient='horizontal', mode='determinate', value=0)
         # 文件浏览器
-        self.tree = ttk.Treeview(self, show="headings", height=18, columns=("a", "b", "c", "d", "e"))
-        self.vbar = ttk.Scrollbar(self, orient=tk.VERTICAL, command=self.tree.yview)
-        self.tree.configure(yscrollcommand=self.vbar.set)
-        self.tree.column("a", width=50, anchor="w")
-        self.tree.column("b", width=200, anchor="w")
-        self.tree.column("c", width=200, anchor="w")
-        self.tree.column("d", width=200, anchor="w")
-        self.tree.column("e", width=200, anchor="w")
-        self.tree.heading("a", text="编号")
-        self.tree.heading("b", text="名称")
-        self.tree.heading("c", text="修改时间")
-        self.tree.heading("d", text="类型")
-        self.tree.heading("e", text="大小")
+        self.tree = ttk.Treeview(self)
+        self.ysb = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
+        self.xsb = ttk.Scrollbar(self, orient='horizontal', command=self.tree.xview)
+        self.tree.configure(yscroll=self.ysb.set, xscroll=self.xsb.set)
+        self.tree.heading('#0', text="预览窗口", anchor='w')
+        self.tree.column("#0", anchor="w")
 
     # 将控件布局
     def create_layout(self):
@@ -67,7 +59,8 @@ class Window(ttk.Frame):
         self.fileToChooseButton.grid(row=2, column=3, **pad_w_e)
         self.progressBar.grid(row=3, column=0, columnspan=4, **pad_w_e)
         self.tree.grid(row=4, column=0, columnspan=4, **pad_w_e)
-        self.vbar.grid(row=4, column=5, sticky=(tk.N, tk.S))
+        self.ysb.grid(row=4, column=5, sticky=(tk.N, tk.S))
+        self.xsb.grid(row=5, column=0, columnspan=4, **pad_w_e)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
@@ -131,36 +124,6 @@ class Window(ttk.Frame):
         else:
             self.passwordEntry["show"] = "*"
 
-    # 在文件浏览器中显示路径下的文件
-    def explorer_file_show(self, file_path, name_handle_func):
-        # 先清空内容
-        [self.tree.delete(item) for item in self.tree.get_children()]
-        f_path = os.path.realpath(file_path)
-        f_name = name_handle_func(os.path.basename(f_path))
-        f_mtime = os.path.getmtime(f_path)
-        f_date = datetime.datetime.fromtimestamp(f_mtime).strftime('%Y/%m/%d %H:%M:%S')
-        f_type = "文件"
-        f_size = os.path.getsize(f_path)
-        f_kb_size = str(math.ceil(f_size / 1024)) + "KB"
-        self.tree.insert("", "end", values=("", f_name, f_date, f_type, f_kb_size))
-
-    # 在文件浏览器中显示路径下的所有文件或文件夹
-    def explorer_dir_show(self, dir_path, name_handle_func):
-        sub_files = sorted(os.listdir(dir_path))
-        length = len(sub_files)
-        # 先清空内容
-        [self.tree.delete(item) for item in self.tree.get_children()]
-        for i in range(0, length):
-            f_name = name_handle_func(sub_files[i])
-            f_path = os.path.realpath(os.path.join(dir_path, sub_files[i]))
-            f_mtime = os.path.getmtime(f_path)
-            f_date = datetime.datetime.fromtimestamp(f_mtime).strftime('%Y/%m/%d %H:%M:%S')
-            _, f_ext = os.path.splitext(f_name)
-            f_type = "文件夹" if os.path.isdir(f_path) else f_ext[1:]+"文件"
-            f_size = os.path.getsize(f_path)
-            f_kb_size = str(math.ceil(f_size/1024)) + "KB" if f_type != "文件夹" else ""
-            self.tree.insert("", "end", values=(i+1, f_name, f_date, f_type, f_kb_size))
-
     # 文件/文件夹输入选择
     def file_from_choose(self):
         file_path = ""
@@ -168,12 +131,12 @@ class Window(ttk.Frame):
             file_path = filedialog.askopenfilename()
             # 选择输入文件路径后，在文件浏览器中选中的文件
             if file_path:
-                self.explorer_file_show(file_path, lambda x: x)
+                DirShowHandle(self, self.tree, file_path, lambda x: x).start()
         elif self.dataOption.get() == "文件夹":
             file_path = filedialog.askdirectory()
             # 选择输入文件夹路径后，在文件浏览器中显示路径下的内容
             if file_path:
-                self.explorer_dir_show(file_path, lambda x: x)
+                DirShowHandle(self, self.tree, file_path, lambda x: x).start()
         self.textFromEntry.delete(0, len(self.textFromEntry.get()))
         self.textFromEntry.insert(0, file_path)
 
@@ -193,16 +156,16 @@ class Window(ttk.Frame):
         if crypto_option == "加密预览":
             if validate("密码", password) and validate("输入", input_text):
                 if data_option == "文件":
-                    self.explorer_file_show(input_text, lambda x: text_encrypt(x, password))
+                    DirShowHandle(self, self.tree, input_text, lambda x: text_encrypt(x, password)).start()
                 elif data_option == "文件夹":
-                    self.explorer_dir_show(input_text, lambda x: text_encrypt(x, password))
+                    DirShowHandle(self, self.tree, input_text, lambda x: text_encrypt(x, password)).start()
 
         elif crypto_option == "解密预览":
             if validate("密码", password) and validate("输入", input_text):
                 if data_option == "文件":
-                    self.explorer_file_show(input_text, lambda x: text_decrypt(x, password))
+                    DirShowHandle(self, self.tree, input_text, lambda x: text_decrypt(x, password)).start()
                 elif data_option == "文件夹":
-                    self.explorer_dir_show(input_text, lambda x: text_decrypt(x, password))
+                    DirShowHandle(self, self.tree, input_text, lambda x: text_decrypt(x, password)).start()
 
         elif data_option == "字符串":
             if validate("密码", password) and validate("输入", input_text):

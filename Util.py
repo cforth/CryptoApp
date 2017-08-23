@@ -111,3 +111,38 @@ class DirHandle(threading.Thread):
         elif self.mode == "decrypt":
             dir_decrypt(self.dir_path, self.output_dir_path, self.password)
         self.main_window.event_generate("<<AllowCrypto>>", when="tail")
+
+
+# 预览加密文件名称
+class DirShowHandle(threading.Thread):
+    def __init__(self, main_window, tree, f_path, name_handle_func):
+        threading.Thread.__init__(self)
+        self.main_window = main_window
+        self.tree = tree
+        self.f_path = f_path
+        self.name_handle_func = name_handle_func
+
+    def run(self):
+        # 发送消息给主窗口，禁用按钮
+        self.main_window.event_generate("<<DisableCrypto>>", when="tail")
+        [self.tree.delete(item) for item in self.tree.get_children()]
+        abspath = os.path.abspath(self.f_path)
+        root_node = self.tree.insert('', 'end', text=abspath, open=True)
+        self.process_directory(root_node, abspath, self.name_handle_func)
+        self.main_window.event_generate("<<AllowCrypto>>", when="tail")
+
+    def process_directory(self, parent, path, name_handle_func):
+        if os.path.isdir(path):
+            # 遍历路径下的子目录
+            for p in os.listdir(path):
+                # 构建路径
+                abspath = os.path.join(path, p)
+                # 是否存在子目录
+                isdir = os.path.isdir(abspath)
+                name = name_handle_func(p)
+                oid = self.tree.insert(parent, 'end', text=name, open=False)
+                if isdir:
+                    self.process_directory(oid, abspath, name_handle_func)
+        else:
+            name = name_handle_func(os.path.basename(path))
+            self.tree.insert(parent, 'end', text=name, open=False)
