@@ -12,15 +12,20 @@ def set_combobox_item(combobox, text, fuzzy=False):
     combobox.current(0 if len(combobox.cget("values")) else -1)
 
 
-def validate(title, string):
+def validate_null(title, string):
     if not string:
         tkmessagebox.showerror("错误", title + " 为空！")
         return False
     return True
 
 
-def path_error_msg(file_path):
-    tkmessagebox.showerror("错误", file_path + " 路径错误！")
+def is_sub_path(output_path, input_path):
+    input_dir = os.path.abspath(input_path).replace('\\', '/')
+    output_dir = os.path.abspath(output_path).replace('\\', '/')
+    if input_dir in output_dir:
+        return True
+    else:
+        return False
 
 
 def text_encrypt(plain_text, password):
@@ -85,6 +90,14 @@ class FileHandle(threading.Thread):
         self.password = password
 
     def run(self):
+        if not os.path.exists(self.file_path):
+            tkmessagebox.showerror("错误", "输入路径不存在！")
+            return
+
+        if os.path.exists(os.path.join(self.output_dir_path, os.path.split(self.file_path)[1])):
+            tkmessagebox.showerror("错误", "输出路径下存在同名文件！")
+            return
+
         # 发送消息给主窗口，禁用按钮
         self.main_window.event_generate("<<DisableCrypto>>", when="tail")
         if self.mode == "encrypt":
@@ -104,6 +117,18 @@ class DirHandle(threading.Thread):
         self.password = password
 
     def run(self):
+        if not os.path.exists(self.dir_path):
+            tkmessagebox.showerror("错误", "输入路径不存在！")
+            return
+
+        if os.path.exists(os.path.join(self.output_dir_path, os.path.split(self.dir_path)[1])):
+            tkmessagebox.showerror("错误", "输出路径下存在同名文件夹！")
+            return
+
+        if is_sub_path(self.output_dir_path, self.dir_path):
+            tkmessagebox.showerror("错误", "输出路径不能是输入路径的子路径！")
+            return
+
         # 发送消息给主窗口，禁用按钮
         self.main_window.event_generate("<<DisableCrypto>>", when="tail")
         if self.mode == "encrypt":

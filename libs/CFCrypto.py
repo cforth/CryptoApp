@@ -110,7 +110,7 @@ class DirFileCrypto(object):
     # 对input_dir中的所有文件（包含子目录中的文件）应用file_handle_func方法
     # 将处理后的文件存放到output_dir中
     @staticmethod
-    def handle(input_dir, output_dir, name_handle_func, file_handle_func):
+    def handle(input_dir, output_dir, file_handle_func):
         real_input_dir = os.path.abspath(input_dir).replace('\\', '/')
         real_output_dir = os.path.abspath(output_dir).replace('\\', '/')
         if not os.path.exists(real_input_dir):
@@ -136,17 +136,16 @@ class DirFileCrypto(object):
 
             for f in files:
                 input_file_path = os.path.join(os.path.abspath(path), f)
-                output_file_path = os.path.join(real_output_dir, os.path.abspath(path)[root_dir_index:],
-                                                name_handle_func(f))
+                output_file_path = os.path.join(real_output_dir, os.path.abspath(path)[root_dir_index:], f)
                 file_handle_func(input_file_path, output_file_path)
 
     # 加密input_dir文件夹内的所有文件到output_dir
     def encrypt(self, input_dir, output_dir):
-        DirFileCrypto.handle(input_dir, output_dir, self.string_crypto.encrypt, self.file_crypto.encrypt)
+        DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.encrypt)
 
     # 解密input_dir文件夹内的所有文件到output_dir
     def decrypt(self, input_dir, output_dir):
-        DirFileCrypto.handle(input_dir, output_dir, self.string_crypto.decrypt, self.file_crypto.decrypt)
+        DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.decrypt)
 
 
 # 文件夹名称加密解密类
@@ -157,15 +156,19 @@ class DirNameCrypto(object):
 
     # 修改文件夹名称的静态方法
     @staticmethod
-    def handle(path, handle_func):
-        os.chdir(path)
-        for dir_or_file in os.listdir(path):
-            if os.path.isdir(dir_or_file):
-                DirNameCrypto.handle(os.path.join(os.getcwd(), dir_or_file), handle_func)
+    def handle(f_path, handle_func):
+        os.chdir(f_path)
+        for item in os.listdir(f_path):
+            if os.path.isdir(item):
+                DirNameCrypto.handle(os.path.join(os.getcwd(), item), handle_func)
                 os.chdir('..')
-                dir_name = handle_func(dir_or_file)
+                dir_name = handle_func(item)
                 if dir_name is not None:
-                    os.rename(dir_or_file, dir_name)
+                    os.rename(item, dir_name)
+            elif os.path.isfile(item):
+                file_name = handle_func(item)
+                if file_name is not None:
+                    os.rename(item, file_name)
 
     # 加密文件夹名称
     def encrypt(self, dir_path):
@@ -174,6 +177,9 @@ class DirNameCrypto(object):
         root_path = os.path.abspath('.')
         dir_path = os.path.abspath(dir_path)
         DirNameCrypto.handle(dir_path, self.string_crypto.encrypt)
+        dir_name = self.string_crypto.encrypt(os.path.split(dir_path)[1])
+        os.chdir(os.path.split(dir_path)[0])
+        os.rename(os.path.split(dir_path)[1], dir_name)
         os.chdir(root_path)
 
     # 解密文件夹名称
@@ -183,6 +189,9 @@ class DirNameCrypto(object):
         root_path = os.path.abspath('.')
         dir_path = os.path.abspath(dir_path)
         DirNameCrypto.handle(dir_path, self.string_crypto.decrypt)
+        dir_name = self.string_crypto.decrypt(os.path.split(dir_path)[1])
+        os.chdir(os.path.split(dir_path)[0])
+        os.rename(os.path.split(dir_path)[1], dir_name)
         os.chdir(root_path)
 
 
