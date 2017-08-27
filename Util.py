@@ -12,13 +12,6 @@ def set_combobox_item(combobox, text, fuzzy=False):
     combobox.current(0 if len(combobox.cget("values")) else -1)
 
 
-def validate_null(title, string):
-    if not string:
-        tkmessagebox.showerror("错误", title + " 为空！")
-        return False
-    return True
-
-
 def is_sub_path(output_path, input_path):
     input_dir = os.path.abspath(input_path).replace('\\', '/')
     output_dir = os.path.abspath(output_path).replace('\\', '/')
@@ -152,7 +145,7 @@ class DirShowHandle(threading.Thread):
         self.main_window.event_generate("<<DisableCrypto>>", when="tail")
         [self.tree.delete(item) for item in self.tree.get_children()]
         abspath = os.path.abspath(self.f_path)
-        root_node = self.tree.insert('', 'end', text=abspath, open=True)
+        root_node = self.tree.insert('', 'end', text=self.name_handle_func(os.path.split(abspath)[1]), open=True)
         self.process_directory(root_node, abspath, self.name_handle_func)
         self.main_window.event_generate("<<AllowCrypto>>", when="tail")
 

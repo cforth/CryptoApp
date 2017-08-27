@@ -106,7 +106,6 @@ class DirFileCrypto(object):
 
     # 文件夹处理静态方法
     # 复制input_dir的目录结构（包含子目录结构）到output_dir中
-    # 对input_dir中的所有文件（包含子目录中的文件）的文件名应用name_handle_func方法
     # 对input_dir中的所有文件（包含子目录中的文件）应用file_handle_func方法
     # 将处理后的文件存放到output_dir中
     @staticmethod

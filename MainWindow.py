@@ -19,21 +19,21 @@ class Window(ttk.Frame):
 
     # 创建控件
     def create_widgets(self):
-        self.cryptOptionCombobox = ttk.Combobox(self, textvariable=self.cryptOption)
-        self.dataOptionCombobox = ttk.Combobox(self, textvariable=self.dataOption)
+        self.cryptOptionCombobox = ttk.Combobox(self, width=10, textvariable=self.cryptOption)
+        self.dataOptionCombobox = ttk.Combobox(self, width=10, textvariable=self.dataOption)
         self.populate_comboboxes()
         self.passwordEntry = ttk.Entry(self, width=40, show="*")
-        self.passwordShowButton = ttk.Button(self, text="密码", command=self.password_show)
+        self.passwordShowButton = ttk.Button(self, text="密码", width=5, command=self.password_show)
         self.textFromEntry = ttk.Entry(self, width=40)
         self.textToEntry = ttk.Entry(self, width=40)
-        self.fileFromChooseButton = ttk.Button(self, text="来源", state="disable", width=20,
+        self.fileFromChooseButton = ttk.Button(self, text="来源", state="disable", width=10,
                                                command=self.file_from_choose)
-        self.fileToChooseButton = ttk.Button(self, text="目标", state="disable", width=20, command=self.file_to_choose)
-        self.button = ttk.Button(self, text="执行", width=20, command=self.converter)
+        self.fileToChooseButton = ttk.Button(self, text="目标", state="disable", width=10, command=self.file_to_choose)
+        self.button = ttk.Button(self, text="执行", command=self.converter)
         # 进度条
         self.progressBar = ttk.Progressbar(self, orient='horizontal', mode='determinate', value=0)
         # 文件浏览器
-        self.tree = ttk.Treeview(self)
+        self.tree = ttk.Treeview(self, height=20)
         self.ysb = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
         self.xsb = ttk.Scrollbar(self, orient='horizontal', command=self.tree.xview)
         self.tree.configure(yscroll=self.ysb.set, xscroll=self.xsb.set)
@@ -147,44 +147,47 @@ class Window(ttk.Frame):
         password = self.passwordEntry.get()
         crypto_option = self.cryptOption.get()
         data_option = self.dataOption.get()
+
+        if not password:
+            tkmessagebox.showerror("错误", "密码不能为空！")
+            return
+        if not input_text:
+            tkmessagebox.showerror("错误", "来源不能为空！")
+            return
+
         if crypto_option == "加密预览":
-            if validate_null("密码", password) and validate_null("输入", input_text):
-                if data_option == "文件" or data_option == "文件夹":
-                    DirShowHandle(self, self.tree, input_text, lambda x: text_encrypt(x, password)).start()
+            if data_option == "文件" or data_option == "文件夹":
+                DirShowHandle(self, self.tree, input_text, lambda x: text_encrypt(x, password)).start()
 
         elif crypto_option == "解密预览":
-            if validate_null("密码", password) and validate_null("输入", input_text):
-                if data_option == "文件" or data_option == "文件夹":
-                    DirShowHandle(self, self.tree, input_text, lambda x: text_decrypt(x, password)).start()
+            if data_option == "文件" or data_option == "文件夹":
+                DirShowHandle(self, self.tree, input_text, lambda x: text_decrypt(x, password)).start()
 
         elif data_option == "字符串":
-            if validate_null("密码", password) and validate_null("输入", input_text):
-                if crypto_option == "加密":
-                    output_text = text_encrypt(input_text, password)
-                elif crypto_option == "解密":
-                    output_text = text_decrypt(input_text, password)
-                else:
-                    return
-                self.textToEntry.delete(0, len(self.textToEntry.get()))
-                self.textToEntry.insert(0, output_text)
+            if crypto_option == "加密":
+                output_text = text_encrypt(input_text, password)
+            elif crypto_option == "解密":
+                output_text = text_decrypt(input_text, password)
+            else:
+                return
+            self.textToEntry.delete(0, len(self.textToEntry.get()))
+            self.textToEntry.insert(0, output_text)
 
         elif data_option == "文件":
-            if validate_null("密码", password) \
-                    and validate_null("输入", input_text) and validate_null("输出", output_text):
-                # 为了不阻塞窗口主程序，使用多线程加密或解密文件
-                if crypto_option == "加密":
-                    FileHandle(self, "encrypt", input_text, output_text, password).start()
-                elif crypto_option == "解密":
-                    FileHandle(self, "decrypt", input_text, output_text, password).start()
-                else:
-                    return
+            if not output_text:
+                tkmessagebox.showerror("错误", "目标不能为空！")
+                return
+            # 为了不阻塞窗口主程序，使用多线程加密或解密文件
+            if crypto_option == "加密":
+                FileHandle(self, "encrypt", input_text, output_text, password).start()
+            elif crypto_option == "解密":
+                FileHandle(self, "decrypt", input_text, output_text, password).start()
 
         elif data_option == "文件夹":
-            if validate_null("密码", password) \
-                    and validate_null("输入", input_text) and validate_null("输出", output_text):
-                if crypto_option == "加密":
-                    DirHandle(self, "encrypt", input_text, output_text, password).start()
-                elif crypto_option == "解密":
-                    DirHandle(self, "decrypt", input_text, output_text, password).start()
-                else:
-                    return
+            if not output_text:
+                tkmessagebox.showerror("错误", "目标不能为空！")
+                return
+            if crypto_option == "加密":
+                DirHandle(self, "encrypt", input_text, output_text, password).start()
+            elif crypto_option == "解密":
+                DirHandle(self, "decrypt", input_text, output_text, password).start()
