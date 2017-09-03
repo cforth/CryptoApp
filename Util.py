@@ -38,14 +38,22 @@ def text_decrypt(cipher_text, password):
 def file_encrypt(file_path, output_dir_path, password):
     f_crypto = FileCrypto(password)
     input_file_name = os.path.split(file_path)[1]
-    f_crypto.encrypt(file_path, os.path.join(output_dir_path, StringCrypto(password).encrypt(input_file_name)))
+    output_path = os.path.join(output_dir_path, StringCrypto(password).encrypt(input_file_name))
+    if os.path.exists(output_path):
+        tkmessagebox.showerror("错误", "加密后输出路径下存在同名文件！")
+        return
+    f_crypto.encrypt(file_path, output_path)
 
 
 def file_decrypt(file_path, output_dir_path, password):
     f_crypto = FileCrypto(password)
     input_file_name = os.path.split(file_path)[1]
     try:
-        f_crypto.decrypt(file_path, os.path.join(output_dir_path, StringCrypto(password).decrypt(input_file_name)))
+        output_path = os.path.join(output_dir_path, StringCrypto(password).decrypt(input_file_name))
+        if os.path.exists(output_path):
+            tkmessagebox.showerror("错误", "解密后输出路径下存在同名文件！")
+            return
+        f_crypto.decrypt(file_path, output_path)
     except Exception as e:
         logging.warning("Convert error: ", e)
         tkmessagebox.showerror("错误", "输入文件格式或者密码错误！")
@@ -87,8 +95,8 @@ class FileHandle(threading.Thread):
             tkmessagebox.showerror("错误", "输入路径不存在！")
             return
 
-        if os.path.exists(os.path.join(self.output_dir_path, os.path.split(self.file_path)[1])):
-            tkmessagebox.showerror("错误", "输出路径下存在同名文件！")
+        if not os.path.exists(self.output_dir_path):
+            tkmessagebox.showerror("错误", "输出目录不存在！")
             return
 
         # 发送消息给主窗口，禁用按钮
