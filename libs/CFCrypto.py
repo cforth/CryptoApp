@@ -1,6 +1,7 @@
 import hashlib
 import os
 import base64
+import re
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
@@ -104,12 +105,19 @@ class DirFileCrypto(object):
         self.file_crypto = FileCrypto(password)
         self.string_crypto = StringCrypto(password)
 
+    # 路径加密解密静态方法
+    @staticmethod
+    def dir_path_handle(path_string, name_handle_func):
+        name_list = re.split(r'[\\/]', path_string)
+        crypto_list = [name_handle_func(s) for s in name_list]
+        return '/'.join(crypto_list)
+
     # 文件夹处理静态方法
-    # 复制input_dir的目录结构（包含子目录结构）到output_dir中
-    # 对input_dir中的所有文件（包含子目录中的文件）应用file_handle_func方法
+    # 复制input_dir的目录结构（包含子目录结构）应用name_handle_func方法后新建在output_dir中
+    # 对input_dir中的所有文件（包含子目录中的文件）应用file_handle_func方法，文件名应用name_handle_func方法
     # 将处理后的文件存放到output_dir中
     @staticmethod
-    def handle(input_dir, output_dir, file_handle_func):
+    def handle(input_dir, output_dir, file_handle_func, name_handle_func):
         real_input_dir = os.path.abspath(input_dir).replace('\\', '/')
         real_output_dir = os.path.abspath(output_dir).replace('\\', '/')
         if not os.path.exists(real_input_dir):
@@ -118,80 +126,36 @@ class DirFileCrypto(object):
         if not os.path.exists(real_output_dir):
             os.mkdir(real_output_dir)
 
-        root_dir = os.path.split(real_input_dir)[0]
+        root_parent_dir = os.path.split(real_input_dir)[0]
+        root_dir = os.path.split(real_input_dir)[1]
         # 如果在磁盘根目录下，要把根目录后的‘/’计入长度
-        root_dir_index = len(root_dir) if root_dir.endswith('/') else len(root_dir) + 1
-        real_output_subdir = os.path.join(real_output_dir, real_input_dir[root_dir_index:])
+        root_dir_index = len(root_parent_dir) if root_parent_dir.endswith('/') else len(root_parent_dir) + 1
+        real_output_subdir = os.path.join(real_output_dir, name_handle_func(root_dir))
 
         if not os.path.exists(real_output_subdir):
             os.mkdir(real_output_subdir)
 
         for path, subdir, files in os.walk(input_dir):
 
+            # 将当前路径path转为加密后的文件夹路径now_output_path
+            now_output_path = DirFileCrypto.dir_path_handle(os.path.abspath(path)[root_dir_index:], name_handle_func)
             for d in subdir:
-                real_output_subdir = os.path.join(real_output_dir, os.path.abspath(path)[root_dir_index:], d)
+                real_output_subdir = os.path.join(real_output_dir, now_output_path, name_handle_func(d))
                 if not os.path.exists(real_output_subdir):
                     os.mkdir(real_output_subdir)
 
             for f in files:
                 input_file_path = os.path.join(os.path.abspath(path), f)
-                output_file_path = os.path.join(real_output_dir, os.path.abspath(path)[root_dir_index:], f)
+                output_file_path = os.path.join(real_output_dir, now_output_path, name_handle_func(f))
                 file_handle_func(input_file_path, output_file_path)
 
     # 加密input_dir文件夹内的所有文件到output_dir
     def encrypt(self, input_dir, output_dir):
-        DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.encrypt)
+        DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.encrypt, self.string_crypto.encrypt)
 
     # 解密input_dir文件夹内的所有文件到output_dir
     def decrypt(self, input_dir, output_dir):
-        DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.decrypt)
-
-
-# 文件夹名称加密解密类
-class DirNameCrypto(object):
-    def __init__(self, password):
-        # 将用password加密文件夹名
-        self.string_crypto = StringCrypto(password)
-
-    # 修改文件夹名称的静态方法
-    @staticmethod
-    def handle(f_path, handle_func):
-        os.chdir(f_path)
-        for item in os.listdir(f_path):
-            if os.path.isdir(item):
-                DirNameCrypto.handle(os.path.join(os.getcwd(), item), handle_func)
-                os.chdir('..')
-                dir_name = handle_func(item)
-                if dir_name is not None:
-                    os.rename(item, dir_name)
-            elif os.path.isfile(item):
-                file_name = handle_func(item)
-                if file_name is not None:
-                    os.rename(item, file_name)
-
-    # 加密文件夹名称
-    def encrypt(self, dir_path):
-        if not os.path.exists(dir_path):
-            raise ValueError('Dir not exists: %s', dir_path)
-        root_path = os.path.abspath('.')
-        dir_path = os.path.abspath(dir_path)
-        DirNameCrypto.handle(dir_path, self.string_crypto.encrypt)
-        dir_name = self.string_crypto.encrypt(os.path.split(dir_path)[1])
-        os.chdir(os.path.split(dir_path)[0])
-        os.rename(os.path.split(dir_path)[1], dir_name)
-        os.chdir(root_path)
-
-    # 解密文件夹名称
-    def decrypt(self, dir_path):
-        if not os.path.exists(dir_path):
-            raise ValueError('Dir not exists: %s', dir_path)
-        root_path = os.path.abspath('.')
-        dir_path = os.path.abspath(dir_path)
-        DirNameCrypto.handle(dir_path, self.string_crypto.decrypt)
-        dir_name = self.string_crypto.decrypt(os.path.split(dir_path)[1])
-        os.chdir(os.path.split(dir_path)[0])
-        os.rename(os.path.split(dir_path)[1], dir_name)
-        os.chdir(root_path)
+        DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.decrypt, self.string_crypto.decrypt)
 
 
 # RSA加密解密类
