@@ -150,12 +150,20 @@ class DirFileCrypto(object):
                 file_handle_func(input_file_path, output_file_path)
 
     # 加密input_dir文件夹内的所有文件到output_dir
-    def encrypt(self, input_dir, output_dir):
-        DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.encrypt, self.string_crypto.encrypt)
+    # encrypt_name控制是否加密文件或文件夹名
+    def encrypt(self, input_dir, output_dir, encrypt_name=True):
+        if encrypt_name:
+            DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.encrypt, self.string_crypto.encrypt)
+        else:
+            DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.encrypt, lambda name: name)
 
     # 解密input_dir文件夹内的所有文件到output_dir
-    def decrypt(self, input_dir, output_dir):
-        DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.decrypt, self.string_crypto.decrypt)
+    # decrypt_name控制是否加密文件或文件夹名
+    def decrypt(self, input_dir, output_dir, decrypt_name=True):
+        if decrypt_name:
+            DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.decrypt, self.string_crypto.decrypt)
+        else:
+            DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.decrypt, lambda name: name)
 
 
 # RSA加密解密类

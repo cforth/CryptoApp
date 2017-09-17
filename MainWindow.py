@@ -16,11 +16,14 @@ class Window(ttk.Frame):
     def create_variables(self):
         self.cryptOption = tk.StringVar()
         self.dataOption = tk.StringVar()
+        self.nameOption = tk.StringVar()
 
     # 创建控件
     def create_widgets(self):
         self.cryptOptionCombobox = ttk.Combobox(self, width=10, textvariable=self.cryptOption)
         self.dataOptionCombobox = ttk.Combobox(self, width=10, textvariable=self.dataOption)
+        # 选择文件夹选项时是否加密解密文件名
+        self.nameCryptoOptionCombobox = ttk.Combobox(self, width=10, textvariable=self.nameOption)
         self.populate_comboboxes()
         self.passwordEntry = ttk.Entry(self, width=40, show="*")
         self.passwordShowButton = ttk.Button(self, text="密码", width=5, command=self.password_show)
@@ -44,18 +47,19 @@ class Window(ttk.Frame):
     def create_layout(self):
         pad_w_e = dict(sticky=(tk.W, tk.E), padx="0.5m", pady="0.5m")
         self.passwordShowButton.grid(row=0, column=0, **pad_w_e)
-        self.passwordEntry.grid(row=0, column=1, columnspan=2, **pad_w_e)
+        self.passwordEntry.grid(row=0, column=1, columnspan=3, **pad_w_e)
         self.fileFromChooseButton.grid(row=1, column=0, **pad_w_e)
-        self.textFromEntry.grid(row=1, column=1, columnspan=2, **pad_w_e)
+        self.textFromEntry.grid(row=1, column=1, columnspan=3, **pad_w_e)
         self.fileToChooseButton.grid(row=2, column=0, **pad_w_e)
-        self.textToEntry.grid(row=2, column=1, columnspan=2, **pad_w_e)
+        self.textToEntry.grid(row=2, column=1, columnspan=3, **pad_w_e)
         self.cryptOptionCombobox.grid(row=3, column=0, **pad_w_e)
         self.dataOptionCombobox.grid(row=3, column=1, **pad_w_e)
-        self.button.grid(row=3, column=2, **pad_w_e)
-        self.progressBar.grid(row=4, column=0, columnspan=3, **pad_w_e)
-        self.tree.grid(row=5, column=0, columnspan=3, sticky=(tk.N, tk.S, tk.E, tk.W))
+        self.nameCryptoOptionCombobox.grid(row=3, column=2, **pad_w_e)
+        self.button.grid(row=3, column=3, **pad_w_e)
+        self.progressBar.grid(row=4, column=0, columnspan=4, **pad_w_e)
+        self.tree.grid(row=5, column=0, columnspan=4, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.ysb.grid(row=5, column=4, sticky=(tk.N, tk.S))
-        self.xsb.grid(row=6, column=0, columnspan=4, **pad_w_e)
+        self.xsb.grid(row=6, column=0, columnspan=5, **pad_w_e)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(2, weight=1)
         self.rowconfigure(5, weight=1)
@@ -75,10 +79,14 @@ class Window(ttk.Frame):
     def populate_comboboxes(self):
         self.cryptOptionCombobox.state(('readonly',))
         self.dataOptionCombobox.state(('readonly',))
+        self.nameCryptoOptionCombobox.state(('readonly',))
         self.cryptOptionCombobox.config(values=["加密", "解密", "加密预览", "解密预览"])
         self.dataOptionCombobox.config(values=["字符串", "文件", "文件夹"])
+        self.nameCryptoOptionCombobox.config(values=["修改文件名", "保持文件名"])
         set_combobox_item(self.cryptOptionCombobox, "加密", True)
         set_combobox_item(self.dataOptionCombobox, "字符串", True)
+        set_combobox_item(self.nameCryptoOptionCombobox, "修改文件名", True)
+        self.nameCryptoOptionCombobox["state"] = "disable"
 
     # 禁用加密解密按钮，开启进度条
     def disable_crypto_button(self, event=None):
@@ -99,9 +107,11 @@ class Window(ttk.Frame):
         if self.dataOption.get() == "字符串":
             self.fileFromChooseButton["state"] = "disable"
             self.fileToChooseButton["state"] = "disable"
+            self.nameCryptoOptionCombobox["state"] = "disable"
         elif self.dataOption.get() == "文件" or self.dataOption.get() == "文件夹":
             self.fileFromChooseButton["state"] = "normal"
             self.fileToChooseButton["state"] = "normal"
+            self.nameCryptoOptionCombobox["state"] = "readonly"
 
     # 设置路径输入是否可用
     def crypt_choose_event(self, event=None):
@@ -147,6 +157,7 @@ class Window(ttk.Frame):
         password = self.passwordEntry.get()
         crypto_option = self.cryptOption.get()
         data_option = self.dataOption.get()
+        is_handle_name = True if self.nameOption.get() == "修改文件名" else False
 
         if not password:
             tkmessagebox.showerror("错误", "密码不能为空！")
@@ -179,15 +190,15 @@ class Window(ttk.Frame):
                 return
             # 为了不阻塞窗口主程序，使用多线程加密或解密文件
             if crypto_option == "加密":
-                FileHandle(self, "encrypt", input_text, output_text, password).start()
+                FileHandle(self, "encrypt", input_text, output_text, password, is_handle_name).start()
             elif crypto_option == "解密":
-                FileHandle(self, "decrypt", input_text, output_text, password).start()
+                FileHandle(self, "decrypt", input_text, output_text, password, is_handle_name).start()
 
         elif data_option == "文件夹":
             if not output_text:
                 tkmessagebox.showerror("错误", "目标不能为空！")
                 return
             if crypto_option == "加密":
-                DirHandle(self, "encrypt", input_text, output_text, password).start()
+                DirHandle(self, "encrypt", input_text, output_text, password, is_handle_name).start()
             elif crypto_option == "解密":
-                DirHandle(self, "decrypt", input_text, output_text, password).start()
+                DirHandle(self, "decrypt", input_text, output_text, password, is_handle_name).start()

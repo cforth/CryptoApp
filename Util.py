@@ -35,21 +35,29 @@ def text_decrypt(cipher_text, password):
     return "输入格式或者密码错误！"
 
 
-def file_encrypt(file_path, output_dir_path, password):
+def file_encrypt(file_path, output_dir_path, password, is_encrypt_name):
     f_crypto = FileCrypto(password)
     input_file_name = os.path.split(file_path)[1]
-    output_path = os.path.join(output_dir_path, StringCrypto(password).encrypt(input_file_name))
+    # is_encrypt_name为False时，不加密文件名
+    if is_encrypt_name:
+        output_path = os.path.join(output_dir_path, StringCrypto(password).encrypt(input_file_name))
+    else:
+        output_path = os.path.join(output_dir_path, input_file_name)
     if os.path.exists(output_path):
         tkmessagebox.showerror("错误", "加密后输出路径下存在同名文件！")
         return
     f_crypto.encrypt(file_path, output_path)
 
 
-def file_decrypt(file_path, output_dir_path, password):
+def file_decrypt(file_path, output_dir_path, password, is_decrypt_name):
     f_crypto = FileCrypto(password)
     input_file_name = os.path.split(file_path)[1]
     try:
-        output_path = os.path.join(output_dir_path, StringCrypto(password).decrypt(input_file_name))
+        # is_decrypt_name为False时，不解密文件名
+        if is_decrypt_name:
+            output_path = os.path.join(output_dir_path, StringCrypto(password).decrypt(input_file_name))
+        else:
+            output_path = os.path.join(output_dir_path, input_file_name)
         if os.path.exists(output_path):
             tkmessagebox.showerror("错误", "解密后输出路径下存在同名文件！")
             return
@@ -60,23 +68,37 @@ def file_decrypt(file_path, output_dir_path, password):
     return ""
 
 
-def dir_encrypt(dir_path, output_dir_path, password):
+def dir_encrypt(dir_path, output_dir_path, password, is_encrypt_name):
     dir_crypto = DirFileCrypto(password)
-    output_path = os.path.join(output_dir_path, StringCrypto(password).encrypt(os.path.split(dir_path)[1]))
+    if is_encrypt_name:
+        output_path = os.path.join(output_dir_path, StringCrypto(password).encrypt(os.path.split(dir_path)[1]))
+    else:
+        output_path = os.path.join(output_dir_path, os.path.split(dir_path)[1])
     if os.path.exists(output_path):
         tkmessagebox.showerror("错误", "加密后输出路径下存在同名文件夹！")
         return
-    dir_crypto.encrypt(dir_path, output_dir_path)
+    # is_encrypt_name为False时，不加密文件和文件夹名
+    if is_encrypt_name:
+        dir_crypto.encrypt(dir_path, output_dir_path)
+    else:
+        dir_crypto.encrypt(dir_path, output_dir_path, False)
 
 
-def dir_decrypt(dir_path, output_dir_path, password):
+def dir_decrypt(dir_path, output_dir_path, password, is_decrypt_name):
     dir_crypto = DirFileCrypto(password)
     try:
-        output_path = os.path.join(output_dir_path, StringCrypto(password).decrypt(os.path.split(dir_path)[1]))
+        if is_decrypt_name:
+            output_path = os.path.join(output_dir_path, StringCrypto(password).decrypt(os.path.split(dir_path)[1]))
+        else:
+            output_path = os.path.join(output_dir_path, os.path.split(dir_path)[1])
         if os.path.exists(output_path):
             tkmessagebox.showerror("错误", "解密后输出路径下存在同名文件夹！")
             return
-        dir_crypto.decrypt(dir_path, output_dir_path)
+        # is_decrypt_name为False时，不解密文件和文件夹名
+        if is_decrypt_name:
+            dir_crypto.decrypt(dir_path, output_dir_path)
+        else:
+            dir_crypto.decrypt(dir_path, output_dir_path, False)
     except Exception as e:
         logging.warning("Convert error: ", e)
         tkmessagebox.showerror("错误", "输入文件格式或者密码错误！")
@@ -84,13 +106,14 @@ def dir_decrypt(dir_path, output_dir_path, password):
 
 
 class FileHandle(threading.Thread):
-    def __init__(self, main_window, mode, file_path, output_dir_path, password):
+    def __init__(self, main_window, mode, file_path, output_dir_path, password, is_handle_name):
         threading.Thread.__init__(self)
         self.main_window = main_window
         self.mode = mode
         self.file_path = file_path
         self.output_dir_path = output_dir_path
         self.password = password
+        self.is_handle_name = is_handle_name
 
     def run(self):
         if not os.path.exists(self.file_path):
@@ -104,20 +127,21 @@ class FileHandle(threading.Thread):
         # 发送消息给主窗口，禁用按钮
         self.main_window.event_generate("<<DisableCrypto>>", when="tail")
         if self.mode == "encrypt":
-            file_encrypt(self.file_path, self.output_dir_path, self.password)
+            file_encrypt(self.file_path, self.output_dir_path, self.password, self.is_handle_name)
         elif self.mode == "decrypt":
-            file_decrypt(self.file_path, self.output_dir_path, self.password)
+            file_decrypt(self.file_path, self.output_dir_path, self.password, self.is_handle_name)
         self.main_window.event_generate("<<AllowCrypto>>", when="tail")
 
 
 class DirHandle(threading.Thread):
-    def __init__(self, main_window, mode, dir_path, output_dir_path, password):
+    def __init__(self, main_window, mode, dir_path, output_dir_path, password, is_handle_name):
         threading.Thread.__init__(self)
         self.main_window = main_window
         self.mode = mode
         self.dir_path = dir_path
         self.output_dir_path = output_dir_path
         self.password = password
+        self.is_handle_name = is_handle_name
 
     def run(self):
         if not os.path.exists(self.dir_path):
@@ -131,9 +155,9 @@ class DirHandle(threading.Thread):
         # 发送消息给主窗口，禁用按钮
         self.main_window.event_generate("<<DisableCrypto>>", when="tail")
         if self.mode == "encrypt":
-            dir_encrypt(self.dir_path, self.output_dir_path, self.password)
+            dir_encrypt(self.dir_path, self.output_dir_path, self.password, self.is_handle_name)
         elif self.mode == "decrypt":
-            dir_decrypt(self.dir_path, self.output_dir_path, self.password)
+            dir_decrypt(self.dir_path, self.output_dir_path, self.password, self.is_handle_name)
         self.main_window.event_generate("<<AllowCrypto>>", when="tail")
 
 
