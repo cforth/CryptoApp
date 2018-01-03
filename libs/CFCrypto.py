@@ -9,9 +9,6 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Util.Padding import pad, unpad
 
 
-# 2017.12.31 增加了ByteCrypto类
-
-
 # 字符串加密解密类
 class StringCrypto(object):
     def __init__(self, password):
