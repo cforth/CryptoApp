@@ -2,6 +2,7 @@ import hashlib
 import os
 import base64
 import re
+from functools import partial
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
@@ -9,145 +10,155 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Util.Padding import pad, unpad
 
 
-# 字符串加密解密类
-class StringCrypto(object):
-    def __init__(self, password):
+# '\0'填充密码
+def null_pad(data_to_pad):
+    data_len = len(data_to_pad)
+    # 不超过128位的密码填充长度（字节单位）
+    if data_len <= 16:
+        key_len = 16
+    # 128位以上，不超过192位的密码填充长度（字节单位）
+    elif data_len > 16 and data_len <= 24:
+        key_len = 24
+    # 192位以上，不超过256位的密码填充长度（字节单位）
+    elif data_len > 24 and data_len <= 32:
+        key_len = 32
+    # 超过256位的密码直接截断到256位长度
+    else:
+        return data_to_pad[:32]
+    # 进行'\0'填充
+    padding_len = key_len - len(data_to_pad)
+    padding = b'\0' * padding_len
+    return data_to_pad + padding
+
+
+# 生成密码
+def gen_aes_key(password, use_md5):
+    if use_md5:
         # 将密码转为md5值作为密钥
         md5 = hashlib.md5()
         md5.update(password.encode('utf-8'))
-        self.key = md5.digest()
-        # AES的ECB模式，数据的长度必须为16节的倍数
+        key = md5.digest()
+    else:
+        key = null_pad(password.encode('utf-8'))
+
+    return key
+
+
+# 字符串加密解密类
+class StringCrypto(object):
+    def __init__(self, password, use_md5=True, use_urlsafe=True):
+        # AES的ECB模式，数据的长度必须为16字节的倍数
         self.multiple_of_byte = 16
+        self.use_urlsafe = use_urlsafe
+        self.key = gen_aes_key(password, use_md5)
         # 使用ECB模式进行加密解密
         self.cipher = AES.new(self.key, AES.MODE_ECB)
 
     # 加密字符串
-    # 将字符串转为字节串进行AES加密，
-    # 再将加密后的字节串转为16进制字符串，
-    # 再通过base64模块编码
     def encrypt(self, string):
         pad_byte_string = pad(string.encode('utf-8'), self.multiple_of_byte)
         encrypt_byte_string = self.cipher.encrypt(pad_byte_string)
-        encrypt_string = base64.urlsafe_b64encode(encrypt_byte_string).decode('ascii')
+        if self.use_urlsafe:
+            encrypt_string = base64.urlsafe_b64encode(encrypt_byte_string).decode('ascii')
+        else:
+            encrypt_string = base64.b64encode(encrypt_byte_string).decode('ascii')
         return encrypt_string
 
     # 解密字符串
-    # 步骤与加密相反
     def decrypt(self, encrypt_string):
-        encrypt_byte_string = base64.urlsafe_b64decode(bytes(map(ord, encrypt_string)))
+        if self.use_urlsafe:
+            encrypt_byte_string = base64.urlsafe_b64decode(bytes(map(ord, encrypt_string)))
+        else:
+            encrypt_byte_string = base64.b64decode(bytes(map(ord, encrypt_string)))
         pad_byte_string = self.cipher.decrypt(encrypt_byte_string)
         string = unpad(pad_byte_string, self.multiple_of_byte).decode('utf-8')
         return string
 
 
-# 将文件加密后解密后返回二进制数据
+# 将文件加密或解密，返回二进制数据(用于小文件)
 class ByteCrypto:
-    def __init__(self, password):
-        # 将密码转为md5值作为密钥
-        md5 = hashlib.md5()
-        md5.update(password.encode('utf-8'))
-        self.key = md5.digest()
-        # AES的ECB模式，数据的长度必须为16节的倍数
+    def __init__(self, password, use_md5=True):
+        self.key = gen_aes_key(password, use_md5)
+        # AES的ECB模式，数据的长度必须为16字节的倍数
         self.multiple_of_byte = 16
         # 使用ECB模式进行加密解密
         self.cipher = AES.new(self.key, AES.MODE_ECB)
-        # 设置加密解密时分块读取10240KB
-        self.read_kb = 10240
 
-    @staticmethod
-    def handle(file_path, block_size, data_handle_func, data_end_handle_func):
+    def encrypt(self, file_path):
         if not os.path.exists(file_path):
             raise ValueError('Input file path not exists: %s ', file_path)
 
-        file_len = os.path.getsize(file_path)
-        res_data = bytes()
         with open(file_path, 'rb') as f:
-            read = 0
-            while True:
-                data = f.read(block_size)
-                if not data:
-                    break
-                read += len(data)
-                if read == file_len:
-                    data = data_end_handle_func(data)
-                else:
-                    data = data_handle_func(data)
-                res_data = res_data + data
-        return res_data
+            data_to_encrypt = f.read()
+        return self.cipher.encrypt(pad(data_to_encrypt, self.multiple_of_byte))
 
-    # 加密文件
-    def encrypt(self, file_path):
-        block_size = self.read_kb * 1024
-        data_handle_func = self.cipher.encrypt
-        # 读取到文件尾部时，执行尾部补位操作后加密
-        data_end_handle_func = lambda d: self.cipher.encrypt(pad(d, self.multiple_of_byte))
-        return ByteCrypto.handle(file_path, block_size, data_handle_func, data_end_handle_func)
-
-    # 解密文件
     def decrypt(self, file_path):
-        block_size = self.read_kb * 1024
-        data_handle_func = self.cipher.decrypt
-        # 读取到文件尾部时，执行解密后尾部去除补位
-        data_end_handle_func = lambda d: unpad(self.cipher.decrypt(d), self.multiple_of_byte)
-        return ByteCrypto.handle(file_path, block_size, data_handle_func, data_end_handle_func)
+        if not os.path.exists(file_path):
+            raise ValueError('Input file path not exists: %s ', file_path)
+
+        with open(file_path, 'rb') as f:
+            data_to_decrypt = f.read()
+        return unpad(self.cipher.decrypt(data_to_decrypt), self.multiple_of_byte)
 
 
 # 文件加密解密类
 class FileCrypto(object):
-    def __init__(self, password):
-        # 将密码转为md5值作为密钥
-        md5 = hashlib.md5()
-        md5.update(password.encode('utf-8'))
-        self.key = md5.digest()
+    def __init__(self, password, block_size=10 * 1024 * 1024, use_md5=True):
+        self.key = gen_aes_key(password, use_md5)
         # AES的ECB模式，数据的长度必须为16节的倍数
         self.multiple_of_byte = 16
         # 使用ECB模式进行加密解密
         self.cipher = AES.new(self.key, AES.MODE_ECB)
-        # 设置加密解密时分块读取10240KB
-        self.read_kb = 10240
+        # 设置加密解密时分块读取10MB
+        self.block_size = block_size
+        # 加密解密的状态
+        self.crypto_status = False
+        # 已经读取的数据长度
+        self.read_len = 0
 
-    # 文件处理静态方法
-    # 每次读取block_size字节的file_path
-    # 每次读取后，正常是执行data_handle_func方法
-    # 如遇到file_path结尾，则执行data_end_handle_func方法
-    # 写入处理后的数据到output_file_path
-    @staticmethod
-    def handle(file_path, output_file_path, block_size, data_handle_func, data_end_handle_func):
+    # 获取加密解密状态与已经读取的数据长度，用于显示状态
+    def get_status(self):
+        return self.crypto_status, self.read_len
+
+    # 文件处理方法
+    def handle(self, file_path, output_file_path, data_handle_func, data_end_handle_func):
         if not os.path.exists(file_path):
             raise ValueError('Input file path not exists: %s ', file_path)
         elif os.path.exists(output_file_path):
             raise ValueError('Output file exists: %s', output_file_path)
 
         file_len = os.path.getsize(file_path)
-        with open(file_path, 'rb') as f:
-            read = 0
-            while True:
-                data = f.read(block_size)
-                if not data:
-                    break
-                read += len(data)
-                if read == file_len:
-                    data = data_end_handle_func(data)
-                else:
-                    data = data_handle_func(data)
-                with open(output_file_path, 'ab') as out:
-                    out.write(data)
+        self.crypto_status = True
+        try:
+            with open(file_path, 'rb') as f:
+                self.read_len = 0
+                data_iter = iter(partial(f.read, self.block_size), b'')
+                for data in data_iter:
+                    self.read_len += len(data)
+                    if self.read_len == file_len:
+                        data = data_end_handle_func(data)
+                    else:
+                        data = data_handle_func(data)
+                    with open(output_file_path, 'ab') as out:
+                        out.write(data)
+        except Exception as e:
+            raise e
+        finally:
+            self.crypto_status = False
 
     # 加密文件
     def encrypt(self, file_path, output_file_path):
-        block_size = self.read_kb * 1024
         data_handle_func = self.cipher.encrypt
         # 读取到文件尾部时，执行尾部补位操作后加密
         data_end_handle_func = lambda d: self.cipher.encrypt(pad(d, self.multiple_of_byte))
-        FileCrypto.handle(file_path, output_file_path, block_size, data_handle_func, data_end_handle_func)
+        self.handle(file_path, output_file_path, data_handle_func, data_end_handle_func)
 
     # 解密文件
     def decrypt(self, file_path, output_file_path):
-        block_size = self.read_kb * 1024
         data_handle_func = self.cipher.decrypt
         # 读取到文件尾部时，执行解密后尾部去除补位
         data_end_handle_func = lambda d: unpad(self.cipher.decrypt(d), self.multiple_of_byte)
-        FileCrypto.handle(file_path, output_file_path, block_size, data_handle_func, data_end_handle_func)
+        self.handle(file_path, output_file_path, data_handle_func, data_end_handle_func)
 
 
 # 文件夹加密解密类
@@ -156,6 +167,14 @@ class DirFileCrypto(object):
         # 将用password加密文件名和文件
         self.file_crypto = FileCrypto(password)
         self.string_crypto = StringCrypto(password)
+        # 加密解密的状态
+        self.crypto_status = False
+        # 已经加密或解密的文件个数
+        self.read_count = 0
+
+    # 获取加密解密状态与已经处理的文件个数，用于显示状态
+    def get_status(self):
+        return self.crypto_status, self.read_count
 
     # 路径加密解密静态方法
     @staticmethod
@@ -164,12 +183,8 @@ class DirFileCrypto(object):
         crypto_list = [name_handle_func(s) for s in name_list]
         return '/'.join(crypto_list)
 
-    # 文件夹处理静态方法
-    # 复制input_dir的目录结构（包含子目录结构）应用name_handle_func方法后新建在output_dir中
-    # 对input_dir中的所有文件（包含子目录中的文件）应用file_handle_func方法，文件名应用name_handle_func方法
-    # 将处理后的文件存放到output_dir中
-    @staticmethod
-    def handle(input_dir, output_dir, file_handle_func, name_handle_func):
+    # 文件夹处理方法
+    def handle(self, input_dir, output_dir, file_handle_func, name_handle_func):
         real_input_dir = os.path.abspath(input_dir).replace('\\', '/')
         real_output_dir = os.path.abspath(output_dir).replace('\\', '/')
         if not os.path.exists(real_input_dir):
@@ -178,6 +193,8 @@ class DirFileCrypto(object):
         if not os.path.exists(real_output_dir):
             os.mkdir(real_output_dir)
 
+        self.crypto_status = True
+        self.read_count = 0
         root_parent_dir = os.path.split(real_input_dir)[0]
         root_dir = os.path.split(real_input_dir)[1]
         # 如果在磁盘根目录下，要把根目录后的‘/’计入长度
@@ -200,22 +217,25 @@ class DirFileCrypto(object):
                 input_file_path = os.path.join(os.path.abspath(path), f)
                 output_file_path = os.path.join(real_output_dir, now_output_path, name_handle_func(f))
                 file_handle_func(input_file_path, output_file_path)
+                self.read_count += 1
+
+        self.crypto_status = False
 
     # 加密input_dir文件夹内的所有文件到output_dir
     # encrypt_name控制是否加密文件或文件夹名
     def encrypt(self, input_dir, output_dir, encrypt_name=True):
         if encrypt_name:
-            DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.encrypt, self.string_crypto.encrypt)
+            self.handle(input_dir, output_dir, self.file_crypto.encrypt, self.string_crypto.encrypt)
         else:
-            DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.encrypt, lambda name: name)
+            self.handle(input_dir, output_dir, self.file_crypto.encrypt, lambda name: name)
 
     # 解密input_dir文件夹内的所有文件到output_dir
     # decrypt_name控制是否加密文件或文件夹名
     def decrypt(self, input_dir, output_dir, decrypt_name=True):
         if decrypt_name:
-            DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.decrypt, self.string_crypto.decrypt)
+            self.handle(input_dir, output_dir, self.file_crypto.decrypt, self.string_crypto.decrypt)
         else:
-            DirFileCrypto.handle(input_dir, output_dir, self.file_crypto.decrypt, lambda name: name)
+            self.handle(input_dir, output_dir, self.file_crypto.decrypt, lambda name: name)
 
 
 # RSA加密解密类

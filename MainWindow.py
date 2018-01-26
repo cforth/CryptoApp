@@ -17,6 +17,7 @@ class Window(ttk.Frame):
         self.cryptOption = tk.StringVar()
         self.dataOption = tk.StringVar()
         self.nameOption = tk.StringVar()
+        self.process_var = tk.DoubleVar()
 
     # 创建控件
     def create_widgets(self):
@@ -35,6 +36,7 @@ class Window(ttk.Frame):
         self.button = ttk.Button(self, text="执行", command=self.converter)
         # 进度条
         self.progressBar = ttk.Progressbar(self, orient='horizontal', mode='determinate', value=0)
+        self.progressBar['variable'] = self.process_var
         # 文件浏览器
         self.tree = ttk.Treeview(self, height=20)
         self.ysb = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
@@ -88,17 +90,14 @@ class Window(ttk.Frame):
         set_combobox_item(self.nameCryptoOptionCombobox, "修改文件名", True)
         self.nameCryptoOptionCombobox["state"] = "disable"
 
-    # 禁用加密解密按钮，开启进度条
+    # 禁用加密解密按钮
     def disable_crypto_button(self, event=None):
-        # 进度条显示
-        self.progressBar.start()
+
         self.button["state"] = "disable"
         self.button["text"] = "处理中"
 
-    # 启用加密解密按钮，关闭进度条
+    # 启用加密解密按钮
     def allow_crypto_button(self, event=None):
-        # 进度条停止
-        self.progressBar.stop()
         self.button["state"] = "normal"
         self.button["text"] = "执行"
 
