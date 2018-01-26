@@ -3,7 +3,7 @@ import tkinter.messagebox as tkmessagebox
 import threading
 import time
 from threading import Thread
-from CFTookit.NewCrypto import *
+from libs.CFCrypto import *
 
 logging.basicConfig(level=logging.INFO)
 # 全局变量，用于进度条显示当前数值
