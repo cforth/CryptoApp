@@ -18,6 +18,7 @@ class Window(ttk.Frame):
         self.dataOption = tk.StringVar()
         self.nameOption = tk.StringVar()
         self.process_var = tk.DoubleVar()
+        self.process_label_var = tk.StringVar()
 
     # 创建控件
     def create_widgets(self):
@@ -37,6 +38,7 @@ class Window(ttk.Frame):
         # 进度条
         self.progressBar = ttk.Progressbar(self, orient='horizontal', mode='determinate', value=0)
         self.progressBar['variable'] = self.process_var
+        self.progressLabel = ttk.Label(self, textvariable=self.process_label_var)
         # 文件浏览器
         self.tree = ttk.Treeview(self, height=20)
         self.ysb = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
@@ -59,12 +61,13 @@ class Window(ttk.Frame):
         self.nameCryptoOptionCombobox.grid(row=3, column=2, **pad_w_e)
         self.button.grid(row=3, column=3, **pad_w_e)
         self.progressBar.grid(row=4, column=0, columnspan=4, **pad_w_e)
-        self.tree.grid(row=5, column=0, columnspan=4, sticky=(tk.N, tk.S, tk.E, tk.W))
-        self.ysb.grid(row=5, column=4, sticky=(tk.N, tk.S))
-        self.xsb.grid(row=6, column=0, columnspan=5, **pad_w_e)
+        self.progressLabel.grid(row=5, column=0, columnspan=4, **pad_w_e)
+        self.tree.grid(row=6, column=0, columnspan=4, sticky=(tk.N, tk.S, tk.E, tk.W))
+        self.ysb.grid(row=6, column=4, sticky=(tk.N, tk.S))
+        self.xsb.grid(row=7, column=0, columnspan=5, **pad_w_e)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(2, weight=1)
-        self.rowconfigure(5, weight=1)
+        self.rowconfigure(6, weight=1)
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
         self.master.minsize(100, 40)
@@ -92,7 +95,6 @@ class Window(ttk.Frame):
 
     # 禁用加密解密按钮
     def disable_crypto_button(self, event=None):
-
         self.button["state"] = "disable"
         self.button["text"] = "处理中"
 

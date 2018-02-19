@@ -34,17 +34,22 @@ def update_global_now_length(obj, length):
 
 
 # 根据全局变量，更新进度条显示
-def update_process_bar(process_var, max_length, max_position=100):
+def update_process_bar(process_var, process_label_var, max_length, max_position=100):
+    process_var.set(0.0)
+    process_label_var.set("")
     old_length = 0
     global global_now_length
     while True:
         if global_now_length > old_length:
-            process_var.set(global_now_length * max_position / max_length)
+            process_scale = global_now_length / max_length
+            process_var.set(process_scale * max_position)
+            process_label_var.set(str(int(process_scale * 100)) + " %   任务进行中...")
             logging.info("Old ProcessBar position: %d  New ProcessBar position: %d"
                          % (old_length * max_position / max_length, global_now_length * max_position / max_length))
             old_length = global_now_length
         elif global_now_length == max_length:
             process_var.set(max_position)
+            process_label_var.set("100%   任务已完成.")
             return
         time.sleep(0.5)
 
@@ -85,7 +90,7 @@ def file_encrypt(main_window, file_path, output_dir_path, password, is_encrypt_n
     input_file_name = os.path.split(file_path)[1]
     max_length = os.path.getsize(file_path)
     t = Thread(target=update_global_now_length, args=(f_crypto, max_length,))
-    b = Thread(target=update_process_bar, args=(main_window.process_var, max_length))
+    b = Thread(target=update_process_bar, args=(main_window.process_var, main_window.process_label_var, max_length))
     # is_encrypt_name为False时，不加密文件名
     if is_encrypt_name:
         output_path = os.path.join(output_dir_path, StringCrypto(password).encrypt(input_file_name))
@@ -105,7 +110,7 @@ def file_decrypt(main_window, file_path, output_dir_path, password, is_decrypt_n
     input_file_name = os.path.split(file_path)[1]
     max_length = os.path.getsize(file_path)
     t = Thread(target=update_global_now_length, args=(f_crypto, max_length,))
-    b = Thread(target=update_process_bar, args=(main_window.process_var, max_length))
+    b = Thread(target=update_process_bar, args=(main_window.process_var, main_window.process_label_var, max_length))
     try:
         # is_decrypt_name为False时，不解密文件名
         if is_decrypt_name:
@@ -129,7 +134,7 @@ def dir_encrypt(main_window, dir_path, output_dir_path, password, is_encrypt_nam
     dir_crypto = DirFileCrypto(password)
     max_length = count_files(dir_path)
     t = Thread(target=update_global_now_length, args=(dir_crypto, max_length,))
-    b = Thread(target=update_process_bar, args=(main_window.process_var, max_length))
+    b = Thread(target=update_process_bar, args=(main_window.process_var, main_window.process_label_var, max_length))
     if is_encrypt_name:
         output_path = os.path.join(output_dir_path, StringCrypto(password).encrypt(os.path.split(dir_path)[1]))
     else:
@@ -151,7 +156,7 @@ def dir_decrypt(main_window, dir_path, output_dir_path, password, is_decrypt_nam
     dir_crypto = DirFileCrypto(password)
     max_length = count_files(dir_path)
     t = Thread(target=update_global_now_length, args=(dir_crypto, max_length,))
-    b = Thread(target=update_process_bar, args=(main_window.process_var, max_length))
+    b = Thread(target=update_process_bar, args=(main_window.process_var, main_window.process_label_var, max_length))
     try:
         if is_decrypt_name:
             output_path = os.path.join(output_dir_path, StringCrypto(password).decrypt(os.path.split(dir_path)[1]))
