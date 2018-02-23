@@ -3,20 +3,22 @@ import tkinter.ttk as ttk
 import tkinter.messagebox as messagebox
 import ImgLook
 import Cryptor
+import RandomPassword
 
 
-class TopWindow(ttk.Frame):
+class RootWindow(ttk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
         self.menubar = tk.Menu(self)
-        self.ImgLookWindow = None
-        self.CryptoWindow = None
+        self.ChildWindow = None
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
-        self.master.minsize(100, 40)
+        self.master.columnconfigure(0, weight=1)
+        self.master.rowconfigure(0, weight=1)
 
         option_menu = tk.Menu(self.menubar, tearoff=0)
         option_menu.add_command(label="图片查看", command=self.img_look)
+        option_menu.add_command(label="随机密码", command=self.random_password)
         option_menu.add_command(label="加密解密", command=self.crypto)
         option_menu.add_separator()
         option_menu.add_command(label="退出", command=self.master.quit)
@@ -33,30 +35,34 @@ class TopWindow(ttk.Frame):
         self.master.config(menu=self.menubar)
 
     def clear_window(self):
-        if self.ImgLookWindow:
-            self.ImgLookWindow.destroy()
-            self.ImgLookWindow = None
-        elif self.CryptoWindow:
-            self.CryptoWindow.destroy()
-            self.CryptoWindow = None
+        if self.ChildWindow:
+            self.ChildWindow.destroy()
+            self.ChildWindow = None
 
     def img_look(self):
         self.clear_window()
-        self.ImgLookWindow = ImgLook.Window("ImgLookUI.json", self)
+        self.ChildWindow = ImgLook.Window("ImgLookUI.json", self)
         self.master.title("图片查看器")
+        self.master.minsize(600, 150)
+
+    def random_password(self):
+        self.clear_window()
+        self.ChildWindow = RandomPassword.Window("RandomPasswordUI.json", self)
+        self.master.title("随机密码生成器")
+        self.master.minsize(600, 30)
 
     def crypto(self):
         self.clear_window()
-        self.CryptoWindow = Cryptor.Window(self)
+        self.ChildWindow = Cryptor.Window(self)
         self.master.title("加密解密器")
+        self.master.minsize(400, 650)
 
     def help_about(self):
         messagebox.showinfo('关于', 'CF工具箱V1.0')  # 弹出消息提示框
 
-def main():
+
+if __name__ == '__main__':
     master = tk.Tk()
-    mb = TopWindow(master)
+    mb = RootWindow(master)
     mb.crypto()
     master.mainloop()
-
-main()

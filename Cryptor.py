@@ -208,5 +208,6 @@ if __name__ == '__main__':
     app = Window()
     # 设置窗口标题:
     app.master.title("CF加密解密器")
+    app.master.minsize(400, 500)
     # 主消息循环:
     app.mainloop()
