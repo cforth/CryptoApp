@@ -2,7 +2,7 @@
 
 ###### E-mail:cforth@cfxyz.com
 
-一个简单的加密解密工具箱GUI程序，使用Python3实现。包含加密解密程序和图片查看器，可通过选项菜单进行切换。
+一个简单的加密解密工具箱GUI程序，使用Python3实现。包含以下几个小工具，可通过选项菜单进行切换。
 
 ## 使用方法
 
@@ -52,3 +52,23 @@ ImgLook--图片查看器
 python3 ImgLook.py
 ```
 支持常见图片格式（包括GIF动图）的显示，并且支持读取使用CFCrypto加密过的图片。
+
+
+RandomPassword--随机密码生成器
+=====================
+
+## 安装需要
+
+* Python
+    * Python 3.6
+* Windows(32位/64位)
+    * Windows XP及以上
+* Linux
+    * python3-tk
+    
+## 使用方法
+
+```bash
+python3 RandomPassword.py
+```
+指定密码长度和复杂度，生成随机密码。
