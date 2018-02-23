@@ -10,7 +10,7 @@
 python3 CryptoApp.pyw
 ```
 
-Cryptor--图片查看器
+Cryptor--加密解密器
 =====================
 
 ## 安装需要
