@@ -1,9 +1,9 @@
 import io
 import os
 import tkinter.filedialog as filedialog
-from Lib.GifHandle import *
-from Lib.json2gui import *
-from Lib.CFCrypto import ByteCrypto, StringCrypto
+from libs.GifHandle import *
+from libs.json2gui import *
+from libs.CFCrypto import ByteCrypto, StringCrypto
 
 
 # 窗口类

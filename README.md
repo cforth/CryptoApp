@@ -4,6 +4,12 @@
 
 一个简单的加密解密工具箱GUI程序，使用Python3实现。包含加密解密程序和图片查看器，可通过选项菜单进行切换。
 
+## 使用方法
+
+```bash
+python3 CryptoApp.pyw
+```
+
 Cryptor--图片查看器
 =====================
 
@@ -20,7 +26,7 @@ Cryptor--图片查看器
 ## 使用方法
 
 ```bash
-python3 CryptoApp.pyw
+python3 Cryptor.py
 ```
 支持加密字符串、文件、文件夹，可以预览加密或解密后的文件名称。
 
