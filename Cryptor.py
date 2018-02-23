@@ -70,7 +70,6 @@ class Window(ttk.Frame):
         self.rowconfigure(6, weight=1)
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
-        self.master.minsize(100, 40)
 
     # 绑定事件
     def create_bindings(self):
@@ -203,3 +202,11 @@ class Window(ttk.Frame):
                 DirHandle(self, "encrypt", input_text, output_text, password, is_handle_name).start()
             elif crypto_option == "解密":
                 DirHandle(self, "decrypt", input_text, output_text, password, is_handle_name).start()
+
+
+if __name__ == '__main__':
+    app = Window()
+    # 设置窗口标题:
+    app.master.title("CF加密解密器")
+    # 主消息循环:
+    app.mainloop()
