@@ -72,3 +72,23 @@ RandomPassword--随机密码生成器
 python3 RandomPassword.py
 ```
 指定密码长度和复杂度，生成随机密码。
+
+
+FileSplit--文件分割合并器
+=====================
+
+## 安装需要
+
+* Python
+    * Python 3.6
+* Windows(32位/64位)
+    * Windows XP及以上
+* Linux
+    * python3-tk
+    
+## 使用方法
+
+```bash
+python3 FileSplit.py
+```
+文件分割和合并。

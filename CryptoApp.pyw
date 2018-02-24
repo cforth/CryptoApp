@@ -3,6 +3,7 @@ import tkinter.ttk as ttk
 import tkinter.messagebox as messagebox
 import ImgLook
 import Cryptor
+import FileSplit
 import RandomPassword
 
 
@@ -19,6 +20,7 @@ class RootWindow(ttk.Frame):
         option_menu = tk.Menu(self.menubar, tearoff=0)
         option_menu.add_command(label="图片查看", command=self.img_look)
         option_menu.add_command(label="随机密码", command=self.random_password)
+        option_menu.add_command(label="文件分割", command=self.file_split)
         option_menu.add_command(label="加密解密", command=self.crypto)
         option_menu.add_separator()
         option_menu.add_command(label="退出", command=self.master.quit)
@@ -49,6 +51,12 @@ class RootWindow(ttk.Frame):
         self.clear_window()
         self.ChildWindow = RandomPassword.Window("RandomPasswordUI.json", self)
         self.master.title("随机密码生成器")
+        self.master.minsize(600, 30)
+
+    def file_split(self):
+        self.clear_window()
+        self.ChildWindow = FileSplit.Window("FileSplitUI.json", self)
+        self.master.title("文件分割合并器")
         self.master.minsize(600, 30)
 
     def crypto(self):

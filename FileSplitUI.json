@@ -1,0 +1,54 @@
+{
+  "fileFromButton": {
+    "class": "Button",
+    "int": {"width": 10},
+    "string": {"text": "来源"},
+    "command": "file_from_button_callback",
+    "grid": {"row":0, "column":0, "sticky":["W", "E"]}
+  },
+  "fileFromEntry": {
+    "class": "Entry",
+    "var": "file_from",
+    "int": {"width": 100},
+    "grid": {"row":0, "column":1, "sticky":["W", "E"]}
+  },
+  "fileToButton": {
+    "class": "Button",
+    "int": {"width": 10},
+    "string": {"text": "目标"},
+    "command": "file_to_button_callback",
+    "grid": {"row":1, "column":0, "sticky":["W", "E"]}
+  },
+  "fileToEntry": {
+    "class": "Entry",
+    "var": "file_to",
+    "int": {"width": 100},
+    "grid": {"row":1, "column":1, "sticky":["W", "E"]}
+  },
+  "splitCounterLabel": {
+    "class": "Label",
+    "int": {"width": 10},
+    "string": {"text": "个数: "},
+    "grid": {"row":2, "column":0}
+  },
+  "splitCounterEntry": {
+    "class": "Entry",
+    "var": "split_counter",
+    "int": {"width": 100},
+    "grid": {"row":2, "column":1, "sticky":["W", "E"]}
+  },
+  "splitOptionCombobox": {
+    "class": "Combobox",
+    "var": "split_option",
+    "int": {"width": 10},
+    "string": {"state": ["readonly"], "values": ["分割", "合并"]},
+    "grid": {"row":3, "column":0, "sticky":["W", "E"]}
+  },
+  "splitButton": {
+    "class": "Button",
+    "int": {"width": 10},
+    "string": {"text": "执行"},
+    "command": "split_button_callback",
+    "grid": {"row":3, "column":1, "sticky":["E"]}
+  }
+}
