@@ -39,7 +39,7 @@ class FileSearch(object):
     def search(self, dir_path):
         for path, subdir, files in os.walk(dir_path):
             for f in files:
-                if '.' in f and f[f.rindex('.')+1:] in self.the_filter:
+                if '.' in f and f[f.rindex('.') + 1:] in self.the_filter:
                     file_path = os.path.abspath(path)
                     yield os.path.join(file_path, f)
 
