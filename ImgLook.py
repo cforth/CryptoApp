@@ -26,6 +26,8 @@ class Window(ttk.Frame):
         self.img_max_width = 1280
         # 设置默认的图片宽度，并设置图片大小滑动条的位置
         self.img_width = 500
+        # 图片需要逆时针旋转的角度
+        self.rotate_angle = 0
         self.__dict__["imgSizeScale"].set(self.img_width * 100 / self.img_max_width)
         self.__dict__["imgSizeInfo"].set(str(self.img_width * 100 // self.img_max_width) + "%")
         # 绑定键盘事件
@@ -34,7 +36,7 @@ class Window(ttk.Frame):
         self.master.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(1, weight=1)
-        self.rowconfigure(3, weight=1)
+        self.rowconfigure(4, weight=1)
 
     # 初始化下拉列表，设置默认值
     def init_default_crypto_option(self):
@@ -68,6 +70,7 @@ class Window(ttk.Frame):
 
     # 向前翻页显示图片
     def prev_img_button_callback(self, event=None):
+        self.rotate_angle = 0
         old_img_path = getattr(self, "imgPath").get()
         index = self.img_list.index(old_img_path)
         if index == 0:
@@ -79,6 +82,7 @@ class Window(ttk.Frame):
 
     # 向后翻页显示图片
     def next_img_button_callback(self, event=None):
+        self.rotate_angle = 0
         old_img_path = getattr(self, "imgPath").get()
         index = self.img_list.index(old_img_path)
         if index == len(self.img_list) - 1:
@@ -88,9 +92,18 @@ class Window(ttk.Frame):
             getattr(self, "imgPath").set(new_music_path)
             self.img_show()
 
+    # 逆时针旋转图片
+    def rotate_img_button_callback(self, event=None):
+        # 逆时针旋转90度
+        self.rotate_angle += 90
+        # 超过360度取余
+        self.rotate_angle %= 360
+        self.img_show()
+
     # 关闭当前的图片，并释放图片内存
     def close_img_button_callback(self, event=None):
         self.cancel_img()
+        self.rotate_angle = 0
 
     # 拖动图片大小滑动条时，显示图片大小百分比
     def set_img_size_info(self, event=None):
@@ -102,8 +115,14 @@ class Window(ttk.Frame):
         self.set_img_size_info()
         self.img_show()
 
+    # 静态图片显示
     def default_img_show(self, img_path):
-        img_data = Image.open(img_path)
+        # 根据rotate_angle逆时针旋转图片
+        if not self.rotate_angle:
+            img_data = Image.open(img_path)
+        else:
+            img_data = Image.open(img_path).rotate(self.rotate_angle)
+
         (x, y) = img_data.size
         x_s = self.img_width
         # 调整图片大小时保持横纵比

@@ -60,26 +60,32 @@
     "var": "imgSizeInfo",
     "grid": {"row":2, "column":2, "sticky":["W", "E"]}
   },
-  "prevImgButton": {
+  "rotateImgButton": {
     "class": "Button",
-    "string": {"text": "<"},
-    "command": "prev_img_button_callback",
-    "grid": {"row":3, "column":0, "sticky":["N", "S"]}
-  },
-    "imgLabel": {
-    "class": "Label",
-    "grid": {"row":3, "column":1, "sticky":["W", "E", "N", "S"]}
-  },
-  "nextImgButton": {
-    "class": "Button",
-    "string": {"text": ">"},
-    "command": "next_img_button_callback",
-    "grid": {"row":3, "column":2, "sticky":["N", "S"]}
+    "string": {"text": "旋转"},
+    "command": "rotate_img_button_callback",
+    "grid": {"row":3, "column":0}
   },
   "closeImgButton": {
     "class": "Button",
     "string": {"text": "X"},
     "command": "close_img_button_callback",
-    "grid": {"row":4, "column":2}
+    "grid": {"row":3, "column":2}
+  },
+  "prevImgButton": {
+    "class": "Button",
+    "string": {"text": "<"},
+    "command": "prev_img_button_callback",
+    "grid": {"row":4, "column":0, "sticky":["N", "S"]}
+  },
+    "imgLabel": {
+    "class": "Label",
+    "grid": {"row":4, "column":1, "sticky":["W", "E", "N", "S"]}
+  },
+  "nextImgButton": {
+    "class": "Button",
+    "string": {"text": ">"},
+    "command": "next_img_button_callback",
+    "grid": {"row":4, "column":2, "sticky":["N", "S"]}
   }
 }
