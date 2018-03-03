@@ -121,7 +121,7 @@ class Window(ttk.Frame):
         if not self.rotate_angle:
             img_data = Image.open(img_path)
         else:
-            img_data = Image.open(img_path).rotate(self.rotate_angle)
+            img_data = Image.open(img_path).rotate(self.rotate_angle, expand=True)  # 旋转图像
 
         (x, y) = img_data.size
         x_s = self.img_width
