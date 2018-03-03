@@ -25,7 +25,7 @@ class Window(ttk.Frame):
         # 设置图片最大的宽度(gif图片不能缩放)
         self.img_max_width = 1280
         # 设置默认的图片宽度，并设置图片大小滑动条的位置
-        self.img_width = 500
+        self.img_width = self.img_max_width * 0.6
         # 图片需要逆时针旋转的角度
         self.rotate_angle = 0
         self.__dict__["imgSizeScale"].set(self.img_width * 100 / self.img_max_width)
@@ -118,28 +118,41 @@ class Window(ttk.Frame):
     # 静态图片显示
     def default_img_show(self, img_path):
         # 根据rotate_angle逆时针旋转图片
-        if not self.rotate_angle:
-            img_data = Image.open(img_path)
+        if self.rotate_angle == 0 or self.rotate_angle == 180:
+            img_data = Image.open(img_path).rotate(self.rotate_angle, expand=True)  # 旋转图像, 长宽调整
+            x, y = img_data.size
+            x_s = int(self.img_width)
+            # 调整图片大小时保持横纵比
+            y_s = int(y * x_s // x)
+        elif self.rotate_angle == 90 or self.rotate_angle == 270:
+            img_data = Image.open(img_path).rotate(self.rotate_angle, expand=True)  # 旋转图像, 长宽调整
+            x, y = img_data.size
+            y_s = int(self.img_width)
+            # 调整图片大小时保持横纵比
+            x_s = int(x * y_s // y)
         else:
-            img_data = Image.open(img_path).rotate(self.rotate_angle, expand=True)  # 旋转图像
+            img_data = Image.open(img_path).rotate(self.rotate_angle)  # 旋转图像, 长宽不变
+            x, y = img_data.size
+            x_s = int(self.img_width)
+            # 调整图片大小时保持横纵比
+            y_s = int(y * x_s // x)
 
-        (x, y) = img_data.size
-        x_s = self.img_width
-        # 调整图片大小时保持横纵比
-        y_s = y * x_s // x
         out = img_data.resize((x_s, y_s), Image.ANTIALIAS)
         self.img = ImageTk.PhotoImage(out)
         self.__dict__["imgLabel"].configure(image=self.img)
 
+    # 加密静态图片显示
     def crypto_img_show(self, img_path):
         img_file_like = io.BytesIO(ByteCrypto(self.__dict__["password"].get()).decrypt(img_path))
         self.default_img_show(img_file_like)
 
+    # 动态图片显示
     def default_gif_show(self, img_path):
         # 建立gif动图处理类
         self.gif = GifHandle(self.__dict__["imgLabel"], img_path)
         self.gif.start_gif()
 
+    # 加密动态图片显示
     def crypto_gif_show(self, img_path):
         img_file_like = io.BytesIO(ByteCrypto(self.__dict__["password"].get()).decrypt(img_path))
         self.default_gif_show(img_file_like)
