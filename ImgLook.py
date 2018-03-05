@@ -47,9 +47,9 @@ class Window(ttk.Frame):
         img_path = getattr(self, "imgPath").get()
         img_dir_path = img_path[:img_path.rindex("/") + 1]
         # 支持的图片格式后缀
-        img_ext = [".bmp", ".gif", ".jpg", ".png", ".tiff"]
+        img_ext = [".bmp", ".gif", ".jpg", ".png", ".tiff", ".ico"]
         self.img_list = [os.path.join(img_dir_path, img_name) for img_name in os.listdir(img_dir_path)
-                         if os.path.splitext(img_name)[1] in img_ext]
+                         if os.path.splitext(img_name.lower())[1] in img_ext]
 
     def key_event(self, event=None):
         # 右方向键下一首
