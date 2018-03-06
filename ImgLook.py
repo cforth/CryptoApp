@@ -14,6 +14,8 @@ class Window(ttk.Frame):
         create_ui(self, ui_json)
         # 从json自动绑定事件
         create_all_binds(self, ui_json)
+        # 支持的图片格式后缀
+        self.img_ext = [".bmp", ".gif", ".jpg", ".png", ".tiff", ".ico"]
         # 存储GIF动图对象，若不存储，图片对象会被垃圾回收无法显示
         self.gif = None
         # 存储静态图片对象，若不存储，图片对象会被垃圾回收无法显示
@@ -46,10 +48,8 @@ class Window(ttk.Frame):
     def set_img_list(self):
         img_path = getattr(self, "imgPath").get()
         img_dir_path = img_path[:img_path.rindex("/") + 1]
-        # 支持的图片格式后缀
-        img_ext = [".bmp", ".gif", ".jpg", ".png", ".tiff", ".ico"]
         self.img_list = [os.path.join(img_dir_path, img_name) for img_name in os.listdir(img_dir_path)
-                         if os.path.splitext(img_name.lower())[1] in img_ext]
+                         if os.path.splitext(img_name.lower())[1] in self.img_ext]
 
     def key_event(self, event=None):
         # 右方向键下一首
@@ -61,8 +61,10 @@ class Window(ttk.Frame):
 
     # 选择待显示的图片，填充图片路径，设置图片地址列表
     def file_from_button_callback(self, event=None):
-        self.__dict__["imgPath"].set(filedialog.askopenfilename())
-        self.set_img_list()
+        img_path = filedialog.askopenfilename()
+        if img_path:
+            self.__dict__["imgPath"].set(img_path)
+            self.set_img_list()
 
     # 设置密码输入栏中的内容显示或者隐藏
     def password_show_button_callback(self, event=None):
@@ -75,7 +77,13 @@ class Window(ttk.Frame):
     def prev_img_button_callback(self, event=None):
         self.rotate_angle = 0
         old_img_path = getattr(self, "imgPath").get()
-        index = self.img_list.index(old_img_path)
+        if not self.img_list:
+            return
+        elif old_img_path not in self.img_list:
+            index = len(self.img_list)
+        else:
+            index = self.img_list.index(old_img_path)
+
         if index == 0:
             return
         else:
@@ -87,7 +95,13 @@ class Window(ttk.Frame):
     def next_img_button_callback(self, event=None):
         self.rotate_angle = 0
         old_img_path = getattr(self, "imgPath").get()
-        index = self.img_list.index(old_img_path)
+        if not self.img_list:
+            return
+        elif old_img_path not in self.img_list:
+            index = -1
+        else:
+            index = self.img_list.index(old_img_path)
+
         if index == len(self.img_list) - 1:
             return
         else:
@@ -174,7 +188,8 @@ class Window(ttk.Frame):
         self.cancel_img()
         crypto_option = self.__dict__["cryptoOption"].get()
         img_path = self.__dict__["imgPath"].get()
-        if not img_path or not os.path.exists(img_path):
+        # 如果路径不存在或图片后缀不支持，则直接返回
+        if not img_path or not os.path.exists(img_path) or os.path.splitext(img_path.lower())[1] not in self.img_ext:
             return
         img_name = os.path.basename(img_path)
         if crypto_option == "解密文件":
