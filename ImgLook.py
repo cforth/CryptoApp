@@ -50,8 +50,16 @@ class Window(ttk.Frame):
     def set_img_list(self):
         img_path = self.current_img_path
         img_dir_path = img_path[:img_path.rindex("/") + 1]
-        self.img_list = [os.path.join(img_dir_path, img_name) for img_name in os.listdir(img_dir_path)
-                         if os.path.splitext(img_name.lower())[1] in self.img_ext]
+        crypto_option = self.__dict__["cryptoOption"].get()
+        if crypto_option == "解密文件":
+            self.img_list = []
+            for img_name in os.listdir(img_dir_path):
+                decrypt_img_name = StringCrypto(self.__dict__["password"].get()).decrypt(img_name)
+                if os.path.splitext(decrypt_img_name.lower())[1] in self.img_ext:
+                    self.img_list.append(os.path.join(img_dir_path, img_name))
+        elif crypto_option == "解密保名" or crypto_option == "不需解密":
+            self.img_list = [os.path.join(img_dir_path, img_name) for img_name in os.listdir(img_dir_path)
+                             if os.path.splitext(img_name.lower())[1] in self.img_ext]
 
     # 设置显示图片信息
     def set_img_info(self):
@@ -61,7 +69,7 @@ class Window(ttk.Frame):
         else:
             img_index = self.img_list.index(img_path)
             img_name = os.path.basename(img_path)
-            self.__dict__["imgInfo"].set(str(img_index+1) + "/" + str(len(self.img_list)) + " | " + img_name)
+            self.__dict__["imgInfo"].set(str(img_index + 1) + "/" + str(len(self.img_list)) + " | " + img_name)
 
     def key_event(self, event=None):
         # 右方向键下一首
@@ -199,22 +207,34 @@ class Window(ttk.Frame):
         self.cancel_img()
         crypto_option = self.__dict__["cryptoOption"].get()
         img_path = self.current_img_path
-        # 如果路径不存在或图片后缀不支持，则直接返回
-        if not img_path or not os.path.exists(img_path) or os.path.splitext(img_path.lower())[1] not in self.img_ext:
+        # 如果路径不存在直接返回
+        if not img_path or not os.path.exists(img_path):
             return
         img_name = os.path.basename(img_path)
         if crypto_option == "解密文件":
             decrypt_img_name = StringCrypto(self.__dict__["password"].get()).decrypt(img_name)
+            # 如果图片后缀不支持，则直接返回
+            if os.path.splitext(decrypt_img_name.lower())[1] not in self.img_ext:
+                self.__dict__["imgInfo"].set("文件格式不支持")
+                return
             if os.path.splitext(decrypt_img_name)[1] == ".gif":
                 self.crypto_gif_show(img_path)
             else:
                 self.crypto_img_show(img_path)
         elif crypto_option == "不需解密":
+            # 如果图片后缀不支持，则直接返回
+            if os.path.splitext(img_name.lower())[1] not in self.img_ext:
+                self.__dict__["imgInfo"].set("文件格式不支持")
+                return
             if os.path.splitext(img_path)[1] == ".gif":
                 self.default_gif_show(img_path)
             else:
                 self.default_img_show(img_path)
         elif crypto_option == "解密保名":
+            # 如果图片后缀不支持，则直接返回
+            if os.path.splitext(img_name.lower())[1] not in self.img_ext:
+                self.__dict__["imgInfo"].set("文件格式不支持")
+                return
             if os.path.splitext(img_path)[1] == ".gif":
                 self.crypto_gif_show(img_path)
             else:
