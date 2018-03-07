@@ -38,6 +38,9 @@ class RootWindow(ttk.Frame):
 
     def clear_window(self):
         if self.ChildWindow:
+            # 确保图片已经清空
+            if isinstance(self.ChildWindow, ImgLook.Window):
+                self.ChildWindow.cancel_img()
             self.ChildWindow.destroy()
             self.ChildWindow = None
 

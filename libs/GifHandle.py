@@ -3,11 +3,13 @@ from PIL import Image, ImageTk
 
 # GIF动图处理类
 class GifHandle(object):
-    def __init__(self, master_widget, img_path):
+    def __init__(self, master_widget, img_path, rotate_angle=0):
         # 保存显示图片的控件引用
         self.master_widget = master_widget
         # 保存图片路径
         self.img_path = img_path
+        # 逆时针旋转的角度
+        self.rotate_angle = rotate_angle
         # 保存gif格式图片当前显示的帧的数据
         self._frame = None
         # 保存gif格式图片每一帧
@@ -41,12 +43,14 @@ class GifHandle(object):
         except KeyError:
             self.delay = 50
         first = seq[0].convert('RGBA')
-        self._gif_frames = [ImageTk.PhotoImage(first)]
+        # 根据角度逆时针旋转图片
+        self._gif_frames = [ImageTk.PhotoImage(first.rotate(self.rotate_angle, expand=True))]
         temp = seq[0]
         for image in seq[1:]:
             temp.paste(image)
             frame = temp.convert('RGBA')
-            self._gif_frames.append(ImageTk.PhotoImage(frame))
+            # 根据角度逆时针旋转图片
+            self._gif_frames.append(ImageTk.PhotoImage(frame.rotate(self.rotate_angle, expand=True)))
             self._frame_count += 1
 
     # 更新GIF动图的下一帧

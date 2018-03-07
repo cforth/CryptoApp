@@ -166,7 +166,7 @@ class Window(ttk.Frame):
     # 动态图片显示
     def default_gif_show(self, img_path):
         # 建立gif动图处理类
-        self.gif = GifHandle(self.__dict__["imgLabel"], img_path)
+        self.gif = GifHandle(self.__dict__["imgLabel"], img_path, self.rotate_angle)
         self.gif.start_gif()
 
     # 加密动态图片显示
