@@ -1,9 +1,12 @@
 import io
 import os
+import logging
 import tkinter.filedialog as filedialog
 from libs.GifHandle import *
 from libs.json2gui import *
 from libs.CFCrypto import ByteCrypto, StringCrypto
+
+logging.basicConfig(level=logging.INFO)
 
 
 # 窗口类
@@ -54,9 +57,13 @@ class Window(ttk.Frame):
         if crypto_option == "解密文件":
             self.img_list = []
             for img_name in os.listdir(img_dir_path):
-                decrypt_img_name = StringCrypto(self.__dict__["password"].get()).decrypt(img_name)
-                if os.path.splitext(decrypt_img_name.lower())[1] in self.img_ext:
-                    self.img_list.append(os.path.join(img_dir_path, img_name))
+                try:
+                    decrypt_img_name = StringCrypto(self.__dict__["password"].get()).decrypt(img_name)
+                    if os.path.splitext(decrypt_img_name.lower())[1] in self.img_ext:
+                        self.img_list.append(os.path.join(img_dir_path, img_name))
+                except Exception as e:
+                    logging.error("Decrypt img name error!")
+
         elif crypto_option == "解密保名" or crypto_option == "不需解密":
             self.img_list = [os.path.join(img_dir_path, img_name) for img_name in os.listdir(img_dir_path)
                              if os.path.splitext(img_name.lower())[1] in self.img_ext]
