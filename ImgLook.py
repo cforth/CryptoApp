@@ -51,6 +51,15 @@ class Window(ttk.Frame):
         self.img_list = [os.path.join(img_dir_path, img_name) for img_name in os.listdir(img_dir_path)
                          if os.path.splitext(img_name.lower())[1] in self.img_ext]
 
+    # 设置显示图片信息
+    def set_img_info(self):
+        img_path = getattr(self, "imgPath").get()
+        if not self.img_list or img_path not in self.img_list:
+            self.__dict__["imgInfo"].set("")
+        else:
+            img_index = self.img_list.index(img_path)
+            self.__dict__["imgInfo"].set(str(img_index+1) + "/" + str(len(self.img_list)))
+
     def key_event(self, event=None):
         # 右方向键下一首
         if event.keycode == 39:
@@ -65,6 +74,7 @@ class Window(ttk.Frame):
         if img_path:
             self.__dict__["imgPath"].set(img_path)
             self.set_img_list()
+            self.set_img_info()
 
     # 设置密码输入栏中的内容显示或者隐藏
     def password_show_button_callback(self, event=None):
@@ -90,6 +100,7 @@ class Window(ttk.Frame):
             new_music_path = self.img_list[index - 1]
             getattr(self, "imgPath").set(new_music_path)
             self.img_show()
+            self.set_img_info()
 
     # 向后翻页显示图片
     def next_img_button_callback(self, event=None):
@@ -108,6 +119,7 @@ class Window(ttk.Frame):
             new_music_path = self.img_list[index + 1]
             getattr(self, "imgPath").set(new_music_path)
             self.img_show()
+            self.set_img_info()
 
     # 逆时针旋转图片
     def rotate_img_button_callback(self, event=None):
