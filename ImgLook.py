@@ -22,6 +22,8 @@ class Window(ttk.Frame):
         self.img = None
         # 存储图片地址列表，用于前后翻页
         self.img_list = []
+        # 保存当前的图片路径
+        self.current_img_path = ""
         # 初始化下拉列表，设置默认值
         self.init_default_crypto_option()
         # 设置图片最大的宽度(gif图片不能缩放)
@@ -38,7 +40,7 @@ class Window(ttk.Frame):
         self.master.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(1, weight=1)
-        self.rowconfigure(4, weight=1)
+        self.rowconfigure(2, weight=1)
 
     # 初始化下拉列表，设置默认值
     def init_default_crypto_option(self):
@@ -46,19 +48,20 @@ class Window(ttk.Frame):
 
     # 根据图片路径，将当前文件夹内所有图片保存在图片列表，用于前后翻页显示
     def set_img_list(self):
-        img_path = getattr(self, "imgPath").get()
+        img_path = self.current_img_path
         img_dir_path = img_path[:img_path.rindex("/") + 1]
         self.img_list = [os.path.join(img_dir_path, img_name) for img_name in os.listdir(img_dir_path)
                          if os.path.splitext(img_name.lower())[1] in self.img_ext]
 
     # 设置显示图片信息
     def set_img_info(self):
-        img_path = getattr(self, "imgPath").get()
+        img_path = self.current_img_path
         if not self.img_list or img_path not in self.img_list:
             self.__dict__["imgInfo"].set("")
         else:
             img_index = self.img_list.index(img_path)
-            self.__dict__["imgInfo"].set(str(img_index+1) + "/" + str(len(self.img_list)))
+            img_name = os.path.basename(img_path)
+            self.__dict__["imgInfo"].set(str(img_index+1) + "/" + str(len(self.img_list)) + " | " + img_name)
 
     def key_event(self, event=None):
         # 右方向键下一首
@@ -72,9 +75,10 @@ class Window(ttk.Frame):
     def file_from_button_callback(self, event=None):
         img_path = filedialog.askopenfilename()
         if img_path:
-            self.__dict__["imgPath"].set(img_path)
+            self.current_img_path = img_path
             self.set_img_list()
             self.set_img_info()
+            self.img_show()
 
     # 设置密码输入栏中的内容显示或者隐藏
     def password_show_button_callback(self, event=None):
@@ -86,7 +90,7 @@ class Window(ttk.Frame):
     # 向前翻页显示图片
     def prev_img_button_callback(self, event=None):
         self.rotate_angle = 0
-        old_img_path = getattr(self, "imgPath").get()
+        old_img_path = self.current_img_path
         if not self.img_list:
             return
         elif old_img_path not in self.img_list:
@@ -97,15 +101,15 @@ class Window(ttk.Frame):
         if index == 0:
             return
         else:
-            new_music_path = self.img_list[index - 1]
-            getattr(self, "imgPath").set(new_music_path)
+            new_img_path = self.img_list[index - 1]
+            self.current_img_path = new_img_path
             self.img_show()
             self.set_img_info()
 
     # 向后翻页显示图片
     def next_img_button_callback(self, event=None):
         self.rotate_angle = 0
-        old_img_path = getattr(self, "imgPath").get()
+        old_img_path = self.current_img_path
         if not self.img_list:
             return
         elif old_img_path not in self.img_list:
@@ -116,8 +120,8 @@ class Window(ttk.Frame):
         if index == len(self.img_list) - 1:
             return
         else:
-            new_music_path = self.img_list[index + 1]
-            getattr(self, "imgPath").set(new_music_path)
+            new_img_path = self.img_list[index + 1]
+            self.current_img_path = new_img_path
             self.img_show()
             self.set_img_info()
 
@@ -128,11 +132,6 @@ class Window(ttk.Frame):
         # 超过360度取余
         self.rotate_angle %= 360
         self.img_show()
-
-    # 关闭当前的图片，并释放图片内存
-    def close_img_button_callback(self, event=None):
-        self.cancel_img()
-        self.rotate_angle = 0
 
     # 拖动图片大小滑动条时，显示图片大小百分比
     def set_img_size_info(self, event=None):
@@ -199,7 +198,7 @@ class Window(ttk.Frame):
     def img_show(self, event=None):
         self.cancel_img()
         crypto_option = self.__dict__["cryptoOption"].get()
-        img_path = self.__dict__["imgPath"].get()
+        img_path = self.current_img_path
         # 如果路径不存在或图片后缀不支持，则直接返回
         if not img_path or not os.path.exists(img_path) or os.path.splitext(img_path.lower())[1] not in self.img_ext:
             return
@@ -226,6 +225,6 @@ if __name__ == '__main__':
     app = Window("ImgLookUI.json")
     # 设置窗口标题:
     app.master.title("图片查看器")
-    app.master.minsize(600, 150)
+    app.master.minsize(600, 600)
     # 主消息循环:
     app.mainloop()

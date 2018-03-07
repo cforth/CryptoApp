@@ -1,9 +1,9 @@
 {
-  "passwordShowButton": {
-    "class": "Button",
+  "cryptoOptionCombobox": {
+    "class": "Combobox",
+    "var": "cryptoOption",
     "int": {"width": 10},
-    "string": {"text": "显隐密码"},
-    "command": "password_show_button_callback",
+    "string": {"state": ["readonly"], "values": ["解密文件", "不需解密", "解密保名"]},
     "grid": {"row":0, "column":0, "sticky":["W", "E"]}
   },
   "passwordEntry": {
@@ -11,87 +11,61 @@
     "var": "password",
     "int": {"width": 40},
     "string": {"show": "*"},
-    "grid": {"row":0, "column":1, "sticky":["W", "E"]}
-  },
-    "cryptoOptionCombobox": {
-    "class": "Combobox",
-    "var": "cryptoOption",
-    "int": {"width": 10},
-    "string": {"state": ["readonly"], "values": ["解密文件", "不需解密", "解密保名"]},
-    "grid": {"row":0, "column":2, "sticky":["W", "E"]}
+    "grid": {"row":0, "column":1, "columnspan":3, "sticky":["W", "E"]}
   },
   "fileFromButton": {
     "class": "Button",
     "int": {"width": 10},
     "string": {"text": "选择文件"},
     "command": "file_from_button_callback",
-    "grid": {"row":1, "column":0, "sticky":["W", "E"]}
-  },
-  "imgPathEntry": {
-    "class": "Entry",
-    "var": "imgPath",
-    "int": {"width": 40},
-    "string": {"state": "disable"},
-    "grid": {"row":1, "column":1, "sticky":["W", "E"]}
-  },
-    "showButton": {
-    "class": "Button",
-    "bind": {"<Button-1>": "img_show"},
-    "int": {"width": 10},
-    "string": {"text": "显示"},
-    "grid": {"row":1, "column":2, "sticky":["W", "E"]}
-  },
-  "imgSizeNameLabel": {
-    "class": "Label",
-    "int": {"width": 10},
-    "string": {"text": "调整大小"},
-    "grid": {"row":2, "column":0, "sticky":["W", "E"]}
-  },
-    "imgSizeScale": {
-    "class": "Scale",
-    "string": {"orient": "horizontal"},
-    "int": {"from_": 1, "to": 100},
-    "bind": {"<ButtonRelease-1>": "set_img_width", "<B1-Motion>": "set_img_size_info"},
-    "grid": {"row":2, "column":1, "sticky":["W", "E"]}
-  },
-  "imgSizeInfoLabel": {
-    "class": "Label",
-    "int": {"width": 10},
-    "var": "imgSizeInfo",
-    "grid": {"row":2, "column":2, "sticky":["W", "E"]}
-  },
-  "rotateImgButton": {
-    "class": "Button",
-    "string": {"text": "旋转"},
-    "command": "rotate_img_button_callback",
-    "grid": {"row":3, "column":0}
-  },
-  "imgInfoLabel": {
-    "class": "Label",
-    "string": {"text": "图片信息"},
-    "var": "imgInfo",
-    "grid": {"row":3, "column":1, "sticky":["W", "E"]}
-  },
-  "closeImgButton": {
-    "class": "Button",
-    "string": {"text": "X"},
-    "command": "close_img_button_callback",
-    "grid": {"row":3, "column":2}
+    "grid": {"row":0, "column":4, "sticky":["W", "E"]}
   },
   "prevImgButton": {
     "class": "Button",
     "string": {"text": "<"},
     "command": "prev_img_button_callback",
-    "grid": {"row":4, "column":0, "sticky":["N", "S"]}
-  },
-    "imgLabel": {
-    "class": "Label",
-    "grid": {"row":4, "column":1, "sticky":["W", "E", "N", "S"]}
+    "grid": {"row":1, "column":0, "sticky":["W", "N", "S"]}
   },
   "nextImgButton": {
     "class": "Button",
     "string": {"text": ">"},
     "command": "next_img_button_callback",
-    "grid": {"row":4, "column":2, "sticky":["N", "S"]}
+    "grid": {"row":1, "column":1, "sticky":["W", "N", "S"]}
+  },
+  "rotateImgButton": {
+    "class": "Button",
+    "string": {"text": "旋转"},
+    "command": "rotate_img_button_callback",
+    "grid": {"row":1, "column":2, "sticky":["W"]}
+  },
+  "imgSizeNameLabel": {
+    "class": "Label",
+    "int": {"width": 10},
+    "string": {"text": "调整大小"},
+    "grid": {"row":1, "column":3, "sticky":["E"]}
+  },
+  "imgSizeScale": {
+    "class": "Scale",
+    "string": {"orient": "horizontal"},
+    "int": {"from_": 1, "to": 100},
+    "bind": {"<ButtonRelease-1>": "set_img_width", "<B1-Motion>": "set_img_size_info"},
+    "grid": {"row":1, "column":4, "sticky":["W", "E"]}
+  },
+  "imgLabel": {
+    "class": "Label",
+    "string": {"bg": "black"},
+    "grid": {"row":2, "column":0, "columnspan":5, "sticky":["W", "E", "N", "S"]}
+  },
+  "imgInfoLabel": {
+    "class": "Label",
+    "string": {"text": "图片信息"},
+    "var": "imgInfo",
+    "grid": {"row":3, "column":0, "columnspan":4, "sticky":["W"]}
+  },
+  "imgSizeInfoLabel": {
+    "class": "Label",
+    "int": {"width": 10},
+    "var": "imgSizeInfo",
+    "grid": {"row":3, "column":4, "sticky":["E"]}
   }
 }

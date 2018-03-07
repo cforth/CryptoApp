@@ -48,7 +48,7 @@ class RootWindow(ttk.Frame):
         self.clear_window()
         self.ChildWindow = ImgLook.Window("ImgLookUI.json", self)
         self.master.title("图片查看器")
-        self.master.minsize(600, 150)
+        self.master.minsize(600, 600)
 
     def random_password(self):
         self.clear_window()
