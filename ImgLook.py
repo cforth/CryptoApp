@@ -51,8 +51,7 @@ class Window(ttk.Frame):
 
     # 根据图片路径，将当前文件夹内所有图片保存在图片列表，用于前后翻页显示
     def set_img_list(self):
-        img_path = self.current_img_path
-        img_dir_path = img_path[:img_path.rindex("/") + 1]
+        img_dir_path = self.current_img_path[:self.current_img_path.rindex("/") + 1]
         crypto_option = self.__dict__["cryptoOption"].get()
         if crypto_option == "解密文件":
             self.img_list = []
@@ -70,13 +69,13 @@ class Window(ttk.Frame):
 
     # 设置显示图片信息
     def set_img_info(self):
-        img_path = self.current_img_path
-        if not self.img_list or img_path not in self.img_list:
+        if not self.img_list or self.current_img_path not in self.img_list:
             self.__dict__["imgInfo"].set("")
         else:
-            img_index = self.img_list.index(img_path)
-            img_name = os.path.basename(img_path)
-            self.__dict__["imgInfo"].set(str(img_index + 1) + "/" + str(len(self.img_list)) + " | " + img_name)
+            img_index = self.img_list.index(self.current_img_path)
+            index_str = str(img_index + 1) + "/" + str(len(self.img_list))
+            img_name = os.path.basename(self.current_img_path)
+            self.__dict__["imgInfo"].set(index_str + " | " + img_name)
 
     def key_event(self, event=None):
         # 右方向键下一首
@@ -105,40 +104,38 @@ class Window(ttk.Frame):
     # 向前翻页显示图片
     def prev_img_button_callback(self, event=None):
         self.rotate_angle = 0
-        old_img_path = self.current_img_path
         if not self.img_list:
             return
-        elif old_img_path not in self.img_list:
+        elif self.current_img_path not in self.img_list:
             index = len(self.img_list)
         else:
-            index = self.img_list.index(old_img_path)
+            index = self.img_list.index(self.current_img_path)
 
         if index == 0:
             return
         else:
             new_img_path = self.img_list[index - 1]
             self.current_img_path = new_img_path
-            self.img_show()
             self.set_img_info()
+            self.img_show()
 
     # 向后翻页显示图片
     def next_img_button_callback(self, event=None):
         self.rotate_angle = 0
-        old_img_path = self.current_img_path
         if not self.img_list:
             return
-        elif old_img_path not in self.img_list:
+        elif self.current_img_path not in self.img_list:
             index = -1
         else:
-            index = self.img_list.index(old_img_path)
+            index = self.img_list.index(self.current_img_path)
 
         if index == len(self.img_list) - 1:
             return
         else:
             new_img_path = self.img_list[index + 1]
             self.current_img_path = new_img_path
-            self.img_show()
             self.set_img_info()
+            self.img_show()
 
     # 逆时针旋转图片
     def rotate_img_button_callback(self, event=None):
@@ -213,11 +210,10 @@ class Window(ttk.Frame):
     def img_show(self, event=None):
         self.cancel_img()
         crypto_option = self.__dict__["cryptoOption"].get()
-        img_path = self.current_img_path
         # 如果路径不存在直接返回
-        if not img_path or not os.path.exists(img_path):
+        if not self.current_img_path or not os.path.exists(self.current_img_path):
             return
-        img_name = os.path.basename(img_path)
+        img_name = os.path.basename(self.current_img_path)
         if crypto_option == "解密文件":
             decrypt_img_name = StringCrypto(self.__dict__["password"].get()).decrypt(img_name)
             # 如果图片后缀不支持，则直接返回
@@ -225,27 +221,27 @@ class Window(ttk.Frame):
                 self.__dict__["imgInfo"].set("文件格式不支持")
                 return
             if os.path.splitext(decrypt_img_name)[1] == ".gif":
-                self.crypto_gif_show(img_path)
+                self.crypto_gif_show(self.current_img_path)
             else:
-                self.crypto_img_show(img_path)
+                self.crypto_img_show(self.current_img_path)
         elif crypto_option == "不需解密":
             # 如果图片后缀不支持，则直接返回
             if os.path.splitext(img_name.lower())[1] not in self.img_ext:
                 self.__dict__["imgInfo"].set("文件格式不支持")
                 return
-            if os.path.splitext(img_path)[1] == ".gif":
-                self.default_gif_show(img_path)
+            if os.path.splitext(self.current_img_path)[1] == ".gif":
+                self.default_gif_show(self.current_img_path)
             else:
-                self.default_img_show(img_path)
+                self.default_img_show(self.current_img_path)
         elif crypto_option == "解密保名":
             # 如果图片后缀不支持，则直接返回
             if os.path.splitext(img_name.lower())[1] not in self.img_ext:
                 self.__dict__["imgInfo"].set("文件格式不支持")
                 return
-            if os.path.splitext(img_path)[1] == ".gif":
-                self.crypto_gif_show(img_path)
+            if os.path.splitext(self.current_img_path)[1] == ".gif":
+                self.crypto_gif_show(self.current_img_path)
             else:
-                self.crypto_img_show(img_path)
+                self.crypto_img_show(self.current_img_path)
 
 
 if __name__ == '__main__':
