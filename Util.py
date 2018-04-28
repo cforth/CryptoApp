@@ -34,7 +34,9 @@ def update_global_now_length(obj, length):
 
 
 # 根据全局变量，更新进度条显示
-def update_process_bar(process_var, process_label_var, max_length, max_position=100):
+def update_process_bar(main_window, process_var, process_label_var, max_length, max_position=100):
+    # 发送消息给主窗口，禁用按钮
+    main_window.event_generate("<<DisableCrypto>>", when="tail")
     process_var.set(0.0)
     process_label_var.set("")
     old_length = 0
@@ -50,8 +52,9 @@ def update_process_bar(process_var, process_label_var, max_length, max_position=
         elif global_now_length == max_length:
             process_var.set(max_position)
             process_label_var.set("100%   任务已完成.")
-            return
+            break
         time.sleep(0.5)
+    main_window.event_generate("<<AllowCrypto>>", when="tail")
 
 
 def set_combobox_item(combobox, text, fuzzy=False):
@@ -90,7 +93,8 @@ def file_encrypt(main_window, file_path, output_dir_path, password, is_encrypt_n
     input_file_name = os.path.split(file_path)[1]
     max_length = os.path.getsize(file_path)
     t = Thread(target=update_global_now_length, args=(f_crypto, max_length,))
-    b = Thread(target=update_process_bar, args=(main_window.process_var, main_window.process_label_var, max_length))
+    b = Thread(target=update_process_bar,
+               args=(main_window, main_window.process_var, main_window.process_label_var, max_length))
     # is_encrypt_name为False时，不加密文件名
     if is_encrypt_name:
         output_path = os.path.join(output_dir_path, StringCrypto(password).encrypt(input_file_name))
@@ -110,7 +114,8 @@ def file_decrypt(main_window, file_path, output_dir_path, password, is_decrypt_n
     input_file_name = os.path.split(file_path)[1]
     max_length = os.path.getsize(file_path)
     t = Thread(target=update_global_now_length, args=(f_crypto, max_length,))
-    b = Thread(target=update_process_bar, args=(main_window.process_var, main_window.process_label_var, max_length))
+    b = Thread(target=update_process_bar,
+               args=(main_window, main_window.process_var, main_window.process_label_var, max_length))
     try:
         # is_decrypt_name为False时，不解密文件名
         if is_decrypt_name:
@@ -134,7 +139,8 @@ def dir_encrypt(main_window, dir_path, output_dir_path, password, is_encrypt_nam
     dir_crypto = DirFileCrypto(password)
     max_length = count_files(dir_path)
     t = Thread(target=update_global_now_length, args=(dir_crypto, max_length,))
-    b = Thread(target=update_process_bar, args=(main_window.process_var, main_window.process_label_var, max_length))
+    b = Thread(target=update_process_bar,
+               args=(main_window, main_window.process_var, main_window.process_label_var, max_length))
     if is_encrypt_name:
         output_path = os.path.join(output_dir_path, StringCrypto(password).encrypt(os.path.split(dir_path)[1]))
     else:
@@ -156,7 +162,8 @@ def dir_decrypt(main_window, dir_path, output_dir_path, password, is_decrypt_nam
     dir_crypto = DirFileCrypto(password)
     max_length = count_files(dir_path)
     t = Thread(target=update_global_now_length, args=(dir_crypto, max_length,))
-    b = Thread(target=update_process_bar, args=(main_window.process_var, main_window.process_label_var, max_length))
+    b = Thread(target=update_process_bar,
+               args=(main_window, main_window.process_var, main_window.process_label_var, max_length))
     try:
         if is_decrypt_name:
             output_path = os.path.join(output_dir_path, StringCrypto(password).decrypt(os.path.split(dir_path)[1]))
@@ -198,13 +205,10 @@ class FileHandle(threading.Thread):
             tkmessagebox.showerror("错误", "输出目录不存在！")
             return
 
-        # 发送消息给主窗口，禁用按钮
-        self.main_window.event_generate("<<DisableCrypto>>", when="tail")
         if self.mode == "encrypt":
             file_encrypt(self.main_window, self.file_path, self.output_dir_path, self.password, self.is_handle_name)
         elif self.mode == "decrypt":
             file_decrypt(self.main_window, self.file_path, self.output_dir_path, self.password, self.is_handle_name)
-        self.main_window.event_generate("<<AllowCrypto>>", when="tail")
 
 
 class DirHandle(threading.Thread):
@@ -226,13 +230,10 @@ class DirHandle(threading.Thread):
             tkmessagebox.showerror("错误", "输出路径不能是输入路径的子路径！")
             return
 
-        # 发送消息给主窗口，禁用按钮
-        self.main_window.event_generate("<<DisableCrypto>>", when="tail")
         if self.mode == "encrypt":
             dir_encrypt(self.main_window, self.dir_path, self.output_dir_path, self.password, self.is_handle_name)
         elif self.mode == "decrypt":
             dir_decrypt(self.main_window, self.dir_path, self.output_dir_path, self.password, self.is_handle_name)
-        self.main_window.event_generate("<<AllowCrypto>>", when="tail")
 
 
 # 预览加密文件名称
