@@ -143,7 +143,7 @@ class Model(dict, metaclass=ModelMetaclass):
     # 根据列名和值删除数据表中的一行数据
     @classmethod
     def remove(cls, column_key, column_value):
-        sql = "delete from %s WHERE %s = ?" % (cls.__table__, column_key)
+        sql = "delete from %s where %s = ?" % (cls.__table__, column_key)
         logging.info('SQL DELETE: %s' % sql)
         logging.info('ARGS: %s' % str(column_value))
         row_size, result = operate(cls.__table__, sql, (column_value,))
@@ -161,6 +161,23 @@ class Model(dict, metaclass=ModelMetaclass):
         # 插入一行数据
         sql = 'insert into %s (%s) values (%s)' % (self.__table__, ','.join(fields), ','.join(['?' for i in args]))
         logging.info('SQL INSERT: %s' % sql)
+        logging.info('ARGS: %s' % str(args))
+        row_size, result = operate(self.__table__, sql, tuple(args))
+        logging.info('ROW_SIZE: %s' % row_size)
+        logging.info('RESULT: %s' % result)
+        return row_size, result
+
+    # 根据列名和值修改数据表中的一行数据
+    def update_by(self, column_key, column_value):
+        fields = []
+        args = []
+        for k, v in self.__mappings__.items():
+            fields.append(v.name)
+            args.append(getattr(self, k, None))
+        # 修改一行数据
+        sql = 'update `%s` set %s where `%s` = ?' % (self.__table__, ', '.join(['`%s`=?' % k for k in fields]), column_key)
+        args.append(column_value)
+        logging.info('SQL UPDATE: %s' % sql)
         logging.info('ARGS: %s' % str(args))
         row_size, result = operate(self.__table__, sql, tuple(args))
         logging.info('ROW_SIZE: %s' % row_size)
