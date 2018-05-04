@@ -129,16 +129,27 @@ class Model(dict, metaclass=ModelMetaclass):
         logging.info('RESULT: %s' % result)
         return row_size, result
 
-    # 查询数据库中是否存在指定列名和值的记录
+    # 查询数据库中指定列名和值的记录
     @classmethod
     def find(cls, column_key, column_value):
-        sql = 'select * from %s where %s = ?' % (cls.__table__, column_key)
+        # 先将select的键名保存起来
+        key_list = [k for k in cls.__mappings__]
+        sql = 'select %s from %s where %s = ?' % (', '.join(['`%s`' % k for k in key_list]), cls.__table__, column_key)
         logging.info('SQL SELECT: %s' % sql)
         logging.info('ARGS: %s' % str(column_value))
         row_size, result = operate(cls.__table__, sql, (column_value,))
         logging.info('ROW_SIZE: %s' % row_size)
         logging.info('RESULT: %s' % result)
-        return True if result else False
+        result_list = []
+        for line in result:
+            result_list.append(dict(zip(key_list, line)))
+        return row_size, result_list
+
+    # 查询数据库中是否存在指定列名和值的记录
+    @classmethod
+    def exist(cls, column_key, column_value):
+        row_size, result_list = cls.find(column_key, column_value)
+        return True if result_list else False
 
     # 根据列名和值删除数据表中的一行数据
     @classmethod
@@ -149,7 +160,7 @@ class Model(dict, metaclass=ModelMetaclass):
         row_size, result = operate(cls.__table__, sql, (column_value,))
         logging.info('ROW_SIZE: %s' % row_size)
         logging.info('RESULT: %s' % result)
-        return row_size
+        return row_size, result
 
     # 插入一行数据到数据表
     def save(self):
@@ -175,7 +186,8 @@ class Model(dict, metaclass=ModelMetaclass):
             fields.append(v.name)
             args.append(getattr(self, k, None))
         # 修改一行数据
-        sql = 'update `%s` set %s where `%s` = ?' % (self.__table__, ', '.join(['`%s`=?' % k for k in fields]), column_key)
+        sql = 'update `%s` set %s where `%s` = ?' % (
+            self.__table__, ', '.join(['`%s`=?' % k for k in fields]), column_key)
         args.append(column_value)
         logging.info('SQL UPDATE: %s' % sql)
         logging.info('ARGS: %s' % str(args))
