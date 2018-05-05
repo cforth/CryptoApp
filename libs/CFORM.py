@@ -2,14 +2,12 @@ import sqlite3
 import logging
 import os
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.INFO)
 
 
 # 数据库操作，负责连接、提交事务、断开数据库，返回操作的行数与结果列表
 def operate(db_name, execute_str, execute_args=None):
-    result = None
     conn = sqlite3.connect(db_name + ".db")
-    row_size = 0
     try:
         cursor = conn.cursor()
         if execute_args:
@@ -21,7 +19,7 @@ def operate(db_name, execute_str, execute_args=None):
         cursor.close()
         conn.commit()
     except Exception as e:
-        print(e)
+        raise e
     finally:
         conn.close()
     return row_size, result
@@ -48,6 +46,12 @@ class StringField(Field):
 class IntegerField(Field):
     def __init__(self, name, primary_key=False):
         super(IntegerField, self).__init__(name, 'INTEGER', primary_key)
+
+
+# 浮点型类
+class FloatField(Field):
+    def __init__(self, name, primary_key=False):
+        super(FloatField, self).__init__(name, 'REAL', primary_key)
 
 
 # Model元类
@@ -124,43 +128,39 @@ class Model(dict, metaclass=ModelMetaclass):
             sql += ' %s %s, ' % (fields[i], column_types[i])
         sql += ' %s %s)' % (fields[-1], column_types[-1])
         logging.info('SQL CREATE: %s' % sql)
-        row_size, result = operate(cls.__table__, sql)
-        logging.info('ROW_SIZE: %s' % row_size)
-        logging.info('RESULT: %s' % result)
-        return row_size, result
+        operate(cls.__table__, sql)
 
     # 查询数据库中指定列名和值的记录
     @classmethod
-    def find(cls, column_key, column_value):
+    def find_all(cls, column_key, column_value):
         # 先将select的键名保存起来
         key_list = [k for k in cls.__mappings__]
         sql = 'select %s from %s where %s = ?' % (', '.join(['`%s`' % k for k in key_list]), cls.__table__, column_key)
         logging.info('SQL SELECT: %s' % sql)
         logging.info('ARGS: %s' % str(column_value))
         row_size, result = operate(cls.__table__, sql, (column_value,))
-        logging.info('ROW_SIZE: %s' % row_size)
-        logging.info('RESULT: %s' % result)
         result_list = []
-        for line in result:
-            result_list.append(dict(zip(key_list, line)))
-        return row_size, result_list
+        if not result:
+            return None
+        else:
+            for line in result:
+                result_list.append(cls(**dict(zip(key_list, line))))
+            return result_list
 
     # 查询数据库中是否存在指定列名和值的记录
     @classmethod
-    def exist(cls, column_key, column_value):
-        row_size, result_list = cls.find(column_key, column_value)
-        return True if result_list else False
+    def find(cls, column_key, column_value):
+        result_list = cls.find_all(column_key, column_value)
+        return result_list[0] if result_list else None
 
-    # 根据列名和值删除数据表中的一行数据
+    # 根据列名和值删除数据表中的数据
     @classmethod
-    def remove(cls, column_key, column_value):
+    def remove_all(cls, column_key, column_value):
         sql = "delete from %s where %s = ?" % (cls.__table__, column_key)
         logging.info('SQL DELETE: %s' % sql)
         logging.info('ARGS: %s' % str(column_value))
-        row_size, result = operate(cls.__table__, sql, (column_value,))
-        logging.info('ROW_SIZE: %s' % row_size)
-        logging.info('RESULT: %s' % result)
-        return row_size, result
+        row_size = operate(cls.__table__, sql, (column_value,))[0]
+        return row_size
 
     # 插入一行数据到数据表
     def save(self):
@@ -173,12 +173,10 @@ class Model(dict, metaclass=ModelMetaclass):
         sql = 'insert into %s (%s) values (%s)' % (self.__table__, ','.join(fields), ','.join(['?' for i in args]))
         logging.info('SQL INSERT: %s' % sql)
         logging.info('ARGS: %s' % str(args))
-        row_size, result = operate(self.__table__, sql, tuple(args))
-        logging.info('ROW_SIZE: %s' % row_size)
-        logging.info('RESULT: %s' % result)
-        return row_size, result
+        row_size = operate(self.__table__, sql, tuple(args))[0]
+        return row_size
 
-    # 根据列名和值修改数据表中的一行数据
+    # 根据列名和值修改数据表中的数据
     def update_by(self, column_key, column_value):
         fields = []
         args = []
@@ -191,7 +189,5 @@ class Model(dict, metaclass=ModelMetaclass):
         args.append(column_value)
         logging.info('SQL UPDATE: %s' % sql)
         logging.info('ARGS: %s' % str(args))
-        row_size, result = operate(self.__table__, sql, tuple(args))
-        logging.info('ROW_SIZE: %s' % row_size)
-        logging.info('RESULT: %s' % result)
-        return row_size, result
+        row_size = operate(self.__table__, sql, tuple(args))[0]
+        return row_size
