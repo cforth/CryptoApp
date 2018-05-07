@@ -2,7 +2,7 @@ import sqlite3
 import logging
 import os
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.ERROR)
 
 
 # 数据库操作，负责连接、提交事务、断开数据库，返回操作的行数与结果列表
