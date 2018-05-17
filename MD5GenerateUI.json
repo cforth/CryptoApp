@@ -1,0 +1,28 @@
+{
+  "fileFromButton": {
+    "class": "Button",
+    "int": {"width": 10},
+    "string": {"text": "选择文件"},
+    "command": "file_from_button_callback",
+    "grid": {"row":0, "column":0, "sticky":["W", "E"]}
+  },
+  "fileFromPathEntry": {
+    "class": "Entry",
+    "var": "file_from_path",
+    "int": {"width": 40},
+    "string": {"state": ["readonly"]},
+    "grid": {"row":0, "column":1, "sticky":["W", "E"]}
+  },
+  "MD5GenerateButton": {
+    "class": "Button",
+    "int": {"width": 10},
+    "string": {"text": "MD5生成"},
+    "command": "md5_generate_button_callback",
+    "grid": {"row":0, "column":2, "sticky":["W", "E"]}
+  },
+  "MD5ResultText": {
+    "class": "Text",
+    "int": {"width": 60, "height": 20},
+    "grid": {"row":1, "column":0, "columnspan":3, "sticky":["W", "E", "N", "S"]}
+  }
+}

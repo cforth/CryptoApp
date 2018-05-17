@@ -5,6 +5,7 @@ import ImgLook
 import Cryptor
 import FileSplit
 import RandomPassword
+import MD5Generate
 
 
 class RootWindow(ttk.Frame):
@@ -21,6 +22,7 @@ class RootWindow(ttk.Frame):
         option_menu.add_command(label="图片查看", command=self.img_look)
         option_menu.add_command(label="随机密码", command=self.random_password)
         option_menu.add_command(label="文件分割", command=self.file_split)
+        option_menu.add_command(label="MD5值", command=self.md5_gen)
         option_menu.add_command(label="加密解密", command=self.crypto)
         option_menu.add_separator()
         option_menu.add_command(label="退出", command=self.master.quit)
@@ -60,6 +62,12 @@ class RootWindow(ttk.Frame):
         self.clear_window()
         self.ChildWindow = FileSplit.Window("FileSplitUI.json", self)
         self.master.title("文件分割合并器")
+        self.master.minsize(600, 30)
+
+    def md5_gen(self):
+        self.clear_window()
+        self.ChildWindow = MD5Generate.Window("MD5GenerateUI.json")
+        self.master.title("MD5值生成器")
         self.master.minsize(600, 30)
 
     def crypto(self):

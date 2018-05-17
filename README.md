@@ -92,3 +92,14 @@ FileSplit--文件分割合并器
 python3 FileSplit.py
 ```
 文件分割和合并。
+
+
+MD5Generate--文件MD5值生成器
+=====================
+    
+## 使用方法
+
+```bash
+python3 MD5Generate.py
+```
+生成文件的MD5校验值。

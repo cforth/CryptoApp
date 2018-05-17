@@ -316,3 +316,19 @@ class RSACrypto(object):
                 private_file.close()
             with open(output_file_path, 'wb') as f:
                 f.write(data)
+
+
+# 文件MD5值生成
+def get_file_md5(filename):
+    if not os.path.isfile(filename):
+        return
+
+    my_hash = hashlib.md5()
+    with open(filename, 'rb') as f:
+        while True:
+            b = f.read(8096)
+            if not b:
+                break
+            my_hash.update(b)
+
+    return my_hash.hexdigest()
