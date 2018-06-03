@@ -31,8 +31,12 @@ def null_pad(data_to_pad):
     return data_to_pad + padding
 
 
-# 生成密码
-def gen_aes_key(password, use_md5):
+# 生成密钥
+def gen_aes_key(password, salt, use_md5):
+    # 将密码加盐，防止泄露原始密码
+    if salt:
+        password += salt
+
     if use_md5:
         # 将密码转为md5值作为密钥
         md5 = hashlib.md5()
@@ -46,11 +50,12 @@ def gen_aes_key(password, use_md5):
 
 # 字符串加密解密类
 class StringCrypto(object):
-    def __init__(self, password, use_md5=True, use_urlsafe=True):
+    def __init__(self, password, salt="", use_md5=True, use_urlsafe=True):
         # AES的ECB模式，数据的长度必须为16字节的倍数
         self.multiple_of_byte = 16
         self.use_urlsafe = use_urlsafe
-        self.key = gen_aes_key(password, use_md5)
+        # 生成密钥时，选择是否加盐，是否使用md5值
+        self.key = gen_aes_key(password, salt, use_md5)
         # 使用ECB模式进行加密解密
         self.cipher = AES.new(self.key, AES.MODE_ECB)
 
@@ -77,8 +82,9 @@ class StringCrypto(object):
 
 # 将文件加密或解密，返回二进制数据(用于小文件)
 class ByteCrypto:
-    def __init__(self, password, use_md5=True):
-        self.key = gen_aes_key(password, use_md5)
+    def __init__(self, password, salt="", use_md5=True):
+        # 生成密钥时，选择是否加盐，是否使用md5值
+        self.key = gen_aes_key(password, salt, use_md5)
         # AES的ECB模式，数据的长度必须为16字节的倍数
         self.multiple_of_byte = 16
         # 使用ECB模式进行加密解密
@@ -103,8 +109,9 @@ class ByteCrypto:
 
 # 文件加密解密类
 class FileCrypto(object):
-    def __init__(self, password, block_size=10 * 1024 * 1024, use_md5=True):
-        self.key = gen_aes_key(password, use_md5)
+    def __init__(self, password, salt="", use_md5=True, block_size=10 * 1024 * 1024):
+        # 生成密钥时，选择是否加盐，是否使用md5值
+        self.key = gen_aes_key(password, salt, use_md5)
         # AES的ECB模式，数据的长度必须为16节的倍数
         self.multiple_of_byte = 16
         # 使用ECB模式进行加密解密
