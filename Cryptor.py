@@ -28,6 +28,8 @@ class Window(ttk.Frame):
         self.process_label_var = tk.StringVar()
         # 用于记录文件处理或文件夹处理的进度值
         self.task_now_length = 0
+        # 加密解密任务对象，用来改变加密解密的启停状态
+        self.crypto_task = None
 
     # 创建控件
     def create_widgets(self):
@@ -43,7 +45,8 @@ class Window(ttk.Frame):
         self.fileFromChooseButton = ttk.Button(self, text="来源", state="disable", width=10,
                                                command=self.file_from_choose)
         self.fileToChooseButton = ttk.Button(self, text="目标", state="disable", width=10, command=self.file_to_choose)
-        self.button = ttk.Button(self, text="执行", command=self.converter)
+        self.run_button = ttk.Button(self, text="执行", command=self.run_task)
+        self.stop_button = ttk.Button(self, text="停止", command=self.stop_task)
         # 进度条
         self.progressBar = ttk.Progressbar(self, orient='horizontal', mode='determinate', value=0)
         self.progressBar['variable'] = self.process_var
@@ -68,8 +71,9 @@ class Window(ttk.Frame):
         self.cryptOptionCombobox.grid(row=3, column=0, **pad_w_e)
         self.dataOptionCombobox.grid(row=3, column=1, **pad_w_e)
         self.nameCryptoOptionCombobox.grid(row=3, column=2, **pad_w_e)
-        self.button.grid(row=3, column=3, **pad_w_e)
-        self.progressBar.grid(row=4, column=0, columnspan=4, **pad_w_e)
+        self.run_button.grid(row=3, column=3, **pad_w_e)
+        self.progressBar.grid(row=4, column=0, columnspan=3, **pad_w_e)
+        self.stop_button.grid(row=4, column=3, **pad_w_e)
         self.progressLabel.grid(row=5, column=0, columnspan=4, **pad_w_e)
         self.tree.grid(row=6, column=0, columnspan=4, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.ysb.grid(row=6, column=4, sticky=(tk.N, tk.S))
@@ -103,13 +107,13 @@ class Window(ttk.Frame):
 
     # 禁用加密解密按钮
     def disable_crypto_button(self, event=None):
-        self.button["state"] = "disable"
-        self.button["text"] = "处理中"
+        self.run_button["state"] = "disable"
+        self.run_button["text"] = "处理中"
 
     # 启用加密解密按钮
     def allow_crypto_button(self, event=None):
-        self.button["state"] = "normal"
-        self.button["text"] = "执行"
+        self.run_button["state"] = "normal"
+        self.run_button["text"] = "执行"
 
     # 设置文件选择按钮是否可用
     def data_choose_event(self, event=None):
@@ -189,15 +193,19 @@ class Window(ttk.Frame):
                 self.process_var.set(max_position)
                 self.process_label_var.set("100%   任务已完成.")
                 break
+            elif self.crypto_task.if_stop():
+                self.task_now_length = 0
+                self.process_label_var.set("任务已被外部终止.")
+                break
             time.sleep(0.5)
         self.event_generate("<<AllowCrypto>>", when="tail")
 
     # 使用多线程加密文件
     def file_encrypt(self, file_path, output_dir_path, password, is_encrypt_name):
-        f_crypto = FileCrypto(password)
+        self.crypto_task = FileCrypto(password)
         input_file_name = os.path.split(file_path)[1]
         max_length = os.path.getsize(file_path)
-        update_task_length_thread = Thread(target=self.update_task_now_length, args=(f_crypto, max_length,))
+        update_task_length_thread = Thread(target=self.update_task_now_length, args=(self.crypto_task, max_length,))
         update_process_thread = Thread(target=self.update_process_bar, args=(max_length,))
         # is_encrypt_name为False时，不加密文件名
         if is_encrypt_name:
@@ -208,17 +216,17 @@ class Window(ttk.Frame):
             tkmessagebox.showerror("错误", "加密后输出路径下存在同名文件！")
             return
         # 为了不阻塞窗口主程序，使用多线程加密文件
-        crypto_thread = Thread(target=f_crypto.encrypt, args=(file_path, output_path))
+        crypto_thread = Thread(target=self.crypto_task.encrypt, args=(file_path, output_path))
         crypto_thread.start()
         update_task_length_thread.start()
         update_process_thread.start()
 
     # 使用多线程解密文件
     def file_decrypt(self, file_path, output_dir_path, password, is_decrypt_name):
-        f_crypto = FileCrypto(password)
+        self.crypto_task = FileCrypto(password)
         input_file_name = os.path.split(file_path)[1]
         max_length = os.path.getsize(file_path)
-        update_task_length_thread = Thread(target=self.update_task_now_length, args=(f_crypto, max_length,))
+        update_task_length_thread = Thread(target=self.update_task_now_length, args=(self.crypto_task, max_length,))
         update_process_thread = Thread(target=self.update_process_bar, args=(max_length,))
         try:
             # is_decrypt_name为False时，不解密文件名
@@ -230,7 +238,7 @@ class Window(ttk.Frame):
                 tkmessagebox.showerror("错误", "解密后输出路径下存在同名文件！")
                 return
             # 为了不阻塞窗口主程序，使用多线程解密文件
-            crypto_thread = Thread(target=f_crypto.decrypt, args=(file_path, output_path))
+            crypto_thread = Thread(target=self.crypto_task.decrypt, args=(file_path, output_path))
             crypto_thread.start()
             update_task_length_thread.start()
             update_process_thread.start()
@@ -241,9 +249,9 @@ class Window(ttk.Frame):
 
     # 使用多线程加密文件夹
     def dir_encrypt(self, dir_path, output_dir_path, password, is_encrypt_name):
-        dir_crypto = DirFileCrypto(password)
+        self.crypto_task = DirFileCrypto(password)
         max_length = count_files(dir_path)
-        update_task_length_thread = Thread(target=self.update_task_now_length, args=(dir_crypto, max_length,))
+        update_task_length_thread = Thread(target=self.update_task_now_length, args=(self.crypto_task, max_length,))
         update_process_thread = Thread(target=self.update_process_bar, args=(max_length,))
         if is_encrypt_name:
             output_path = os.path.join(output_dir_path, StringCrypto(password).encrypt(os.path.split(dir_path)[1]))
@@ -254,18 +262,18 @@ class Window(ttk.Frame):
             return
         # is_encrypt_name为False时，不加密文件和文件夹名
         if is_encrypt_name:
-            crypto_thread = Thread(target=dir_crypto.encrypt, args=(dir_path, output_dir_path))
+            crypto_thread = Thread(target=self.crypto_task.encrypt, args=(dir_path, output_dir_path))
         else:
-            crypto_thread = Thread(target=dir_crypto.encrypt, args=(dir_path, output_dir_path, False))
+            crypto_thread = Thread(target=self.crypto_task.encrypt, args=(dir_path, output_dir_path, False))
         crypto_thread.start()
         update_task_length_thread.start()
         update_process_thread.start()
 
     # 使用多线程解密文件夹
     def dir_decrypt(self, dir_path, output_dir_path, password, is_decrypt_name):
-        dir_crypto = DirFileCrypto(password)
+        self.crypto_task = DirFileCrypto(password)
         max_length = count_files(dir_path)
-        update_task_length_thread = Thread(target=self.update_task_now_length, args=(dir_crypto, max_length,))
+        update_task_length_thread = Thread(target=self.update_task_now_length, args=(self.crypto_task, max_length,))
         update_process_thread = Thread(target=self.update_process_bar, args=(max_length,))
         try:
             if is_decrypt_name:
@@ -277,9 +285,9 @@ class Window(ttk.Frame):
                 return
             # is_decrypt_name为False时，不解密文件和文件夹名
             if is_decrypt_name:
-                crypto_thread = Thread(target=dir_crypto.decrypt, args=(dir_path, output_dir_path))
+                crypto_thread = Thread(target=self.crypto_task.decrypt, args=(dir_path, output_dir_path))
             else:
-                crypto_thread = Thread(target=dir_crypto.decrypt, args=(dir_path, output_dir_path, False))
+                crypto_thread = Thread(target=self.crypto_task.decrypt, args=(dir_path, output_dir_path, False))
             crypto_thread.start()
             update_task_length_thread.start()
             update_process_thread.start()
@@ -288,8 +296,13 @@ class Window(ttk.Frame):
             tkmessagebox.showerror("错误", "输入文件格式或者密码错误！")
         return ""
 
-    # 执行加密或者解密
-    def converter(self):
+    # 强制停止任务
+    def stop_task(self):
+        if self.crypto_task:
+            self.crypto_task.stop_handle()
+
+    # 执行加密或者解密任务
+    def run_task(self):
         input_text = self.textFromEntry.get()
         output_text = self.textToEntry.get()
         password = self.passwordEntry.get()

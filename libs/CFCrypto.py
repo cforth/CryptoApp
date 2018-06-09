@@ -122,10 +122,21 @@ class FileCrypto(object):
         self.crypto_status = False
         # 已经读取的数据长度
         self.read_len = 0
+        # 记录是否被外部中止
+        self.stop_flag = False
 
     # 获取加密解密状态与已经读取的数据长度，用于显示状态
     def get_status(self):
         return self.crypto_status, self.read_len
+
+    # 停止任务
+    def stop_handle(self):
+        self.crypto_status = False
+        self.stop_flag = True
+
+    # 是否被外部中止任务
+    def if_stop(self):
+        return self.stop_flag
 
     # 文件处理方法
     def handle(self, file_path, output_file_path, data_handle_func, data_end_handle_func):
@@ -136,11 +147,14 @@ class FileCrypto(object):
 
         file_len = os.path.getsize(file_path)
         self.crypto_status = True
+        self.stop_flag = False
         try:
             with open(file_path, 'rb') as f:
                 self.read_len = 0
                 data_iter = iter(partial(f.read, self.block_size), b'')
                 for data in data_iter:
+                    if not self.crypto_status:
+                        break
                     self.read_len += len(data)
                     if self.read_len == file_len:
                         data = data_end_handle_func(data)
@@ -178,10 +192,21 @@ class DirFileCrypto(object):
         self.crypto_status = False
         # 已经加密或解密的文件个数
         self.read_count = 0
+        # 记录是否被外部中止
+        self.stop_flag = False
 
     # 获取加密解密状态与已经处理的文件个数，用于显示状态
     def get_status(self):
         return self.crypto_status, self.read_count
+
+    # 停止任务
+    def stop_handle(self):
+        self.crypto_status = False
+        self.stop_flag = True
+
+    # 是否被外部中止任务
+    def if_stop(self):
+        return self.stop_flag
 
     # 路径加密解密静态方法
     @staticmethod
@@ -201,6 +226,7 @@ class DirFileCrypto(object):
             os.mkdir(real_output_dir)
 
         self.crypto_status = True
+        self.stop_flag = False
         self.read_count = 0
         root_parent_dir = os.path.split(real_input_dir)[0]
         root_dir = os.path.split(real_input_dir)[1]
@@ -221,6 +247,8 @@ class DirFileCrypto(object):
                     os.mkdir(real_output_subdir)
 
             for f in files:
+                if not self.crypto_status:
+                    break
                 input_file_path = os.path.join(os.path.abspath(path), f)
                 output_file_path = os.path.join(real_output_dir, now_output_path, name_handle_func(f))
                 file_handle_func(input_file_path, output_file_path)
