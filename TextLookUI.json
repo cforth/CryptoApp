@@ -1,0 +1,48 @@
+{
+  "cryptoOptionCombobox": {
+    "class": "Combobox",
+    "var": "cryptoOption",
+    "int": {"width": 10},
+    "string": {"state": ["readonly"], "values": ["输入密码", "没有密码"]},
+    "grid": {"row":0, "column":0, "sticky":["W", "E"]}
+  },
+  "passwordEntry": {
+    "class": "Entry",
+    "var": "password",
+    "int": {"width": 20},
+    "string": {"show": "*"},
+    "grid": {"row":0, "column":1, "columnspan":3, "sticky":["W", "E"]}
+  },
+  "fileFromButton": {
+    "class": "Button",
+    "int": {"width": 10},
+    "string": {"text": "读取"},
+    "command": "file_from_button_callback",
+    "grid": {"row":0, "column":4, "sticky":["W", "E"]}
+  },
+  "fileSaveButton": {
+    "class": "Button",
+    "int": {"width": 10},
+    "string": {"text": "保存"},
+    "command": "file_save_button_callback",
+    "grid": {"row":0, "column":5, "sticky":["W", "E"]}
+  },
+  "fileSaveNewButton": {
+    "class": "Button",
+    "int": {"width": 10},
+    "string": {"text": "另存为"},
+    "command": "file_save_new_button_callback",
+    "grid": {"row":0, "column":6, "sticky":["W", "E"]}
+  },
+  "filePathLabel": {
+    "class": "Label",
+    "var": "filePath",
+    "int": {"width": 60},
+    "grid": {"row":1, "column":0, "columnspan":7, "sticky":["W", "E"]}
+  },
+  "fileShowText": {
+    "class": "Text",
+    "int": {"width": 60, "height": 20},
+    "grid": {"row":2, "column":0, "columnspan":7, "sticky":["W", "E", "N", "S"]}
+  }
+}

@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.messagebox as messagebox
+import TextLook
 import ImgLook
 import Cryptor
 import FileSplit
@@ -19,6 +20,7 @@ class RootWindow(ttk.Frame):
         self.master.rowconfigure(0, weight=1)
 
         option_menu = tk.Menu(self.menubar, tearoff=0)
+        option_menu.add_command(label="文本查看", command=self.text_look)
         option_menu.add_command(label="图片查看", command=self.img_look)
         option_menu.add_command(label="随机密码", command=self.random_password)
         option_menu.add_command(label="文件分割", command=self.file_split)
@@ -45,6 +47,12 @@ class RootWindow(ttk.Frame):
                 self.ChildWindow.cancel_img()
             self.ChildWindow.destroy()
             self.ChildWindow = None
+
+    def text_look(self):
+        self.clear_window()
+        self.ChildWindow = TextLook.Window("TextLookUI.json", self)
+        self.master.title("文本查看器")
+        self.master.minsize(600, 30)
 
     def img_look(self):
         self.clear_window()
