@@ -37,8 +37,20 @@
   "filePathLabel": {
     "class": "Label",
     "var": "filePath",
-    "int": {"width": 60},
-    "grid": {"row":1, "column":0, "columnspan":7, "sticky":["W", "E"]}
+    "int": {"width": 40},
+    "grid": {"row":1, "column":0, "columnspan":5, "sticky":["W", "E"]}
+  },
+  "fileCryptoStatusLabel": {
+    "class": "Label",
+    "var": "fileCryptoStatus",
+    "int": {"width": 10},
+    "grid": {"row":1, "column":5, "sticky":["W", "E"]}
+  },
+  "fileSaveStatusLabel": {
+    "class": "Label",
+    "var": "fileSaveStatus",
+    "int": {"width": 10},
+    "grid": {"row":1, "column":6, "sticky":["W", "E"]}
   },
   "fileShowText": {
     "class": "Text",
