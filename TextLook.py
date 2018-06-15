@@ -7,12 +7,18 @@ from libs.CFCrypto import StringCrypto
 
 logging.basicConfig(level=logging.ERROR)
 
+
 # 窗口类
 class Window(ttk.Frame):
     def __init__(self, ui_json, master=None):
         super().__init__(master)
         # 从json自动设置UI控件
         create_ui(self, ui_json)
+        # 设置滚动条
+        self.__dict__["TextScrollbarY"]["command"] = self.__dict__["fileShowText"].yview
+        self.__dict__["TextScrollbarX"]["command"] = self.__dict__["fileShowText"].xview
+        self.__dict__["fileShowText"]['xscrollcommand'] = self.__dict__["TextScrollbarX"].set
+        self.__dict__["fileShowText"]['yscrollcommand'] = self.__dict__["TextScrollbarY"].set
         # 从json自动绑定事件
         create_all_binds(self, ui_json)
         set_combobox_item(self.__dict__["cryptoOptionCombobox"], "没有密码", True)
@@ -22,7 +28,7 @@ class Window(ttk.Frame):
         self.master.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(1, weight=1)
-        self.rowconfigure(1, weight=1)
+        self.rowconfigure(2, weight=1)
 
     def file_from_button_callback(self, event=None):
         self.current_file_path = filedialog.askopenfilename()

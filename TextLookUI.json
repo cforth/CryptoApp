@@ -56,5 +56,15 @@
     "class": "Text",
     "int": {"width": 60, "height": 20},
     "grid": {"row":2, "column":0, "columnspan":7, "sticky":["W", "E", "N", "S"]}
+  },
+  "TextScrollbarY": {
+    "class": "Scrollbar",
+    "string": {"orient": "vertical"},
+    "grid": {"row":2, "column":7, "sticky":["N", "S"]}
+  },
+  "TextScrollbarX": {
+    "class": "Scrollbar",
+    "string": {"orient": "horizontal"},
+    "grid": {"row":3, "column":0, "columnspan":7, "sticky":["W", "E"]}
   }
 }
