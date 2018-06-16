@@ -29,6 +29,8 @@ class Window(ttk.Frame):
         self.current_img_path = ""
         # 初始化下拉列表，设置默认值
         self.init_default_crypto_option()
+        # 设置单页显示
+        set_combobox_item(self.__dict__["pageOptionCombobox"], "单页", True)
         # 设置图片最大的宽度(gif图片不能缩放)
         self.img_max_width = 1280
         # 设置默认的图片宽度，并设置图片大小滑动条的位置
@@ -103,6 +105,7 @@ class Window(ttk.Frame):
 
     # 向前翻页显示图片
     def prev_img_button_callback(self, event=None):
+        page_option = self.__dict__["pageOption"].get()
         self.rotate_angle = 0
         if not self.img_list:
             return
@@ -111,16 +114,25 @@ class Window(ttk.Frame):
         else:
             index = self.img_list.index(self.current_img_path)
 
-        if index == 0:
-            return
-        else:
-            new_img_path = self.img_list[index - 1]
-            self.current_img_path = new_img_path
-            self.set_img_info()
-            self.img_show()
+        if page_option == "单页":
+            if index == 0:
+                return
+            else:
+                self.current_img_path = self.img_list[index - 1]
+        elif page_option == "双页":
+            if index == 0:
+                return
+            elif index == 1:
+                self.current_img_path = self.img_list[index - 1]
+            else:
+                self.current_img_path = self.img_list[index - 2]
+
+        self.set_img_info()
+        self.img_show()
 
     # 向后翻页显示图片
     def next_img_button_callback(self, event=None):
+        page_option = self.__dict__["pageOption"].get()
         self.rotate_angle = 0
         if not self.img_list:
             return
@@ -129,13 +141,21 @@ class Window(ttk.Frame):
         else:
             index = self.img_list.index(self.current_img_path)
 
-        if index == len(self.img_list) - 1:
-            return
-        else:
-            new_img_path = self.img_list[index + 1]
-            self.current_img_path = new_img_path
-            self.set_img_info()
-            self.img_show()
+        if page_option == "单页":
+            if index == len(self.img_list) - 1:
+                return
+            else:
+                self.current_img_path = self.img_list[index + 1]
+        elif page_option == "双页":
+            if index == len(self.img_list) - 1:
+                return
+            elif index == len(self.img_list) - 2:
+                self.current_img_path = self.img_list[index + 1]
+            else:
+                self.current_img_path = self.img_list[index + 2]
+
+        self.set_img_info()
+        self.img_show()
 
     # 逆时针旋转图片
     def rotate_img_button_callback(self, event=None):
@@ -155,8 +175,8 @@ class Window(ttk.Frame):
         self.set_img_size_info()
         self.img_show()
 
-    # 静态图片显示
-    def default_img_show(self, img_path):
+    # 读取图片
+    def default_img_read(self, img_path):
         # 根据rotate_angle逆时针旋转图片
         if self.rotate_angle == 0 or self.rotate_angle == 180:
             img_data = Image.open(img_path).rotate(self.rotate_angle, expand=True)  # 旋转图像, 长宽调整
@@ -177,14 +197,41 @@ class Window(ttk.Frame):
             # 调整图片大小时保持横纵比
             y_s = int(y * x_s // x)
 
-        out = img_data.resize((x_s, y_s), Image.ANTIALIAS)
+        return img_data.resize((x_s, y_s), Image.ANTIALIAS)
+
+    # 静态图片显示
+    def default_img_show(self, img_path):
+        out = self.default_img_read(img_path)
         self.img = ImageTk.PhotoImage(out)
+        self.__dict__["imgLabel"].configure(image=self.img)
+
+    # 双页静态图片显示
+    def default_double_img_show(self, img_path, next_img_path):
+        current_out = self.default_img_read(img_path)
+        next_out = self.default_img_read(next_img_path)
+        current_x, current_y = current_out.size
+        current_x_s = int(self.img_width)
+        current_y_s = int(current_y * current_x_s // current_x)
+        next_x, next_y = next_out.size
+        next_x_s = int(self.img_width)
+        next_y_s = int(next_y * next_x_s // next_x)
+        # 将两张图片合并为一张图片
+        to_image = Image.new('RGBA', (current_x_s + next_x_s, current_y_s if current_y_s > next_y_s else next_y_s))
+        to_image.paste(current_out, (0, 0))
+        to_image.paste(next_out, (current_x_s, 0))
+        self.img = ImageTk.PhotoImage(to_image)
         self.__dict__["imgLabel"].configure(image=self.img)
 
     # 加密静态图片显示
     def crypto_img_show(self, img_path):
         img_file_like = io.BytesIO(ByteCrypto(self.__dict__["password"].get()).decrypt(img_path))
         self.default_img_show(img_file_like)
+
+    # 双页加密静态图片显示
+    def crypto_double_img_show(self, img_path, next_img_path):
+        img_file_like = io.BytesIO(ByteCrypto(self.__dict__["password"].get()).decrypt(img_path))
+        next_img_file_like = io.BytesIO(ByteCrypto(self.__dict__["password"].get()).decrypt(next_img_path))
+        self.default_double_img_show(img_file_like, next_img_file_like)
 
     # 动态图片显示
     def default_gif_show(self, img_path):
@@ -208,6 +255,7 @@ class Window(ttk.Frame):
 
     # 根据不同图片类型和解密选项，显示图片
     def img_show(self, event=None):
+        page_option = self.__dict__["pageOption"].get()
         self.cancel_img()
         crypto_option = self.__dict__["cryptoOption"].get()
         # 如果路径不存在直接返回
@@ -222,8 +270,16 @@ class Window(ttk.Frame):
                 return
             if os.path.splitext(decrypt_img_name)[1] == ".gif":
                 self.crypto_gif_show(self.current_img_path)
-            else:
+            elif page_option == "单页":
                 self.crypto_img_show(self.current_img_path)
+            elif page_option == "双页":
+                index = self.img_list.index(self.current_img_path)
+                # 如果已经到了最后一页，则只显示一页
+                if index == len(self.img_list) - 1:
+                    self.default_img_show(self.current_img_path)
+                else:
+                    next_img_path = self.img_list[index + 1]
+                    self.crypto_double_img_show(self.current_img_path, next_img_path)
         elif crypto_option == "不需解密":
             # 如果图片后缀不支持，则直接返回
             if os.path.splitext(img_name.lower())[1] not in self.img_ext:
@@ -231,8 +287,16 @@ class Window(ttk.Frame):
                 return
             if os.path.splitext(self.current_img_path)[1] == ".gif":
                 self.default_gif_show(self.current_img_path)
-            else:
+            elif page_option == "单页":
                 self.default_img_show(self.current_img_path)
+            elif page_option == "双页":
+                index = self.img_list.index(self.current_img_path)
+                # 如果已经到了最后一页，则只显示一页
+                if index == len(self.img_list) - 1:
+                    self.default_img_show(self.current_img_path)
+                else:
+                    next_img_path = self.img_list[index + 1]
+                    self.default_double_img_show(self.current_img_path, next_img_path)
         elif crypto_option == "解密保名":
             # 如果图片后缀不支持，则直接返回
             if os.path.splitext(img_name.lower())[1] not in self.img_ext:
@@ -240,8 +304,16 @@ class Window(ttk.Frame):
                 return
             if os.path.splitext(self.current_img_path)[1] == ".gif":
                 self.crypto_gif_show(self.current_img_path)
-            else:
+            elif page_option == "单页":
                 self.crypto_img_show(self.current_img_path)
+            elif page_option == "双页":
+                index = self.img_list.index(self.current_img_path)
+                # 如果已经到了最后一页，则只显示一页
+                if index == len(self.img_list) - 1:
+                    self.default_img_show(self.current_img_path)
+                else:
+                    next_img_path = self.img_list[index + 1]
+                    self.crypto_double_img_show(self.current_img_path, next_img_path)
 
 
 if __name__ == '__main__':
