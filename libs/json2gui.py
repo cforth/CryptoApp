@@ -23,6 +23,14 @@ def set_combobox_item(combobox, text, fuzzy=False):
     combobox.current(0 if len(combobox.cget("values")) else -1)
 
 
+# 设置滚动条与框体的绑定
+def set_scrollbar(widget, scrollbar_x, scrollbar_y):
+    scrollbar_y["command"] = widget.yview
+    scrollbar_x["command"] = widget.xview
+    widget['xscrollcommand'] = scrollbar_x.set
+    widget['yscrollcommand'] = scrollbar_y.set
+
+
 # 从json文件创建UI
 def create_ui(self, json_file):
     widget = read_json_file(json_file)

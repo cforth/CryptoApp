@@ -14,13 +14,13 @@ class Window(ttk.Frame):
         super().__init__(master)
         # 从json自动设置UI控件
         create_ui(self, ui_json)
-        # 设置滚动条
-        self.__dict__["TextScrollbarY"]["command"] = self.__dict__["fileShowText"].yview
-        self.__dict__["TextScrollbarX"]["command"] = self.__dict__["fileShowText"].xview
-        self.__dict__["fileShowText"]['xscrollcommand'] = self.__dict__["TextScrollbarX"].set
-        self.__dict__["fileShowText"]['yscrollcommand'] = self.__dict__["TextScrollbarY"].set
         # 从json自动绑定事件
         create_all_binds(self, ui_json)
+        # 设置滚动条
+        set_scrollbar(self.__dict__["fileShowText"],
+                      self.__dict__["TextScrollbarX"],
+                      self.__dict__["TextScrollbarY"])
+        # 设置下拉列表默认值
         set_combobox_item(self.__dict__["cryptoOptionCombobox"], "没有密码", True)
         self.current_file_path = None
         self.file_text = None
