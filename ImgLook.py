@@ -28,11 +28,7 @@ class Window(ttk.Frame):
         # 保存当前的图片路径
         self.current_img_path = ""
         # 初始化下拉列表，设置默认值
-        self.init_default_crypto_option()
-        # 设置单页显示
-        set_combobox_item(self.__dict__["pageOptionCombobox"], "单页", True)
-        # 设置双页阅读顺序
-        set_combobox_item(self.__dict__["orderOptionCombobox"], "左开", True)
+        self.init_default_combobox_item()
         # 设置图片最大的宽度(gif图片不能缩放)
         self.img_max_width = 1280
         # 设置默认的图片宽度，并设置图片大小滑动条的位置
@@ -50,8 +46,13 @@ class Window(ttk.Frame):
         self.rowconfigure(2, weight=1)
 
     # 初始化下拉列表，设置默认值
-    def init_default_crypto_option(self):
+    def init_default_combobox_item(self):
+        # 设置默认的选项
         set_combobox_item(self.__dict__["cryptoOptionCombobox"], "不需解密", True)
+        # 设置单页显示
+        set_combobox_item(self.__dict__["pageOptionCombobox"], "单页", True)
+        # 设置双页阅读顺序
+        set_combobox_item(self.__dict__["orderOptionCombobox"], "左开", True)
 
     # 根据图片路径，将当前文件夹内所有图片保存在图片列表，用于前后翻页显示
     def set_img_list(self):
