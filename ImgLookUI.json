@@ -13,18 +13,18 @@
     "string": {"show": "*"},
     "grid": {"row":0, "column":1, "sticky":["W", "E"]}
   },
-  "orderOptionCombobox": {
-    "class": "Combobox",
-    "var": "orderOption",
-    "int": {"width": 10},
-    "string": {"state": ["readonly"], "values": ["左|右", "右|左"]},
-    "grid": {"row":0, "column":2, "sticky":["W", "E"]}
-  },
   "pageOptionCombobox": {
     "class": "Combobox",
     "var": "pageOption",
     "int": {"width": 10},
     "string": {"state": ["readonly"], "values": ["单页", "双页"]},
+    "grid": {"row":0, "column":2, "sticky":["W", "E"]}
+  },
+  "orderOptionCombobox": {
+    "class": "Combobox",
+    "var": "orderOption",
+    "int": {"width": 10},
+    "string": {"state": ["readonly"], "values": ["左开", "右开"]},
     "grid": {"row":0, "column":3, "sticky":["W", "E"]}
   },
   "fileFromButton": {
@@ -33,6 +33,13 @@
     "string": {"text": "选择文件"},
     "command": "file_from_button_callback",
     "grid": {"row":0, "column":4, "sticky":["W", "E"]}
+  },
+  "refreshButton": {
+    "class": "Button",
+    "int": {"width": 10},
+    "string": {"text": "重新加载"},
+    "command": "refresh_button_callback",
+    "grid": {"row":0, "column":5, "sticky":["W", "E"]}
   },
   "imgSizeNameLabel": {
     "class": "Label",
@@ -47,39 +54,39 @@
     "bind": {"<ButtonRelease-1>": "set_img_width", "<B1-Motion>": "set_img_size_info"},
     "grid": {"row":1, "column":1, "sticky":["W", "E"]}
   },
+  "imgSizeInfoLabel": {
+    "class": "Label",
+    "int": {"width": 10},
+    "var": "imgSizeInfo",
+    "grid": {"row":1, "column":2, "sticky":["W", "E"]}
+  },
   "prevImgButton": {
     "class": "Button",
     "string": {"text": "<"},
     "command": "prev_img_button_callback",
-    "grid": {"row":1, "column":2, "sticky":["W", "N", "S"]}
+    "grid": {"row":1, "column":3, "sticky":["W", "N", "S"]}
   },
   "nextImgButton": {
     "class": "Button",
     "string": {"text": ">"},
     "command": "next_img_button_callback",
-    "grid": {"row":1, "column":3, "sticky":["W", "N", "S"]}
+    "grid": {"row":1, "column":4, "sticky":["W", "N", "S"]}
   },
   "rotateImgButton": {
     "class": "Button",
     "string": {"text": "旋转"},
     "command": "rotate_img_button_callback",
-    "grid": {"row":1, "column":4, "sticky":["W"]}
+    "grid": {"row":1, "column":5, "sticky":["W"]}
   },
   "imgLabel": {
     "class": "Label",
     "string": {"bg": "black"},
-    "grid": {"row":2, "column":0, "columnspan":5, "sticky":["W", "E", "N", "S"]}
+    "grid": {"row":2, "column":0, "columnspan":6, "sticky":["W", "E", "N", "S"]}
   },
   "imgInfoLabel": {
     "class": "Label",
     "string": {"text": "图片信息"},
     "var": "imgInfo",
-    "grid": {"row":3, "column":0, "columnspan":4, "sticky":["W"]}
-  },
-  "imgSizeInfoLabel": {
-    "class": "Label",
-    "int": {"width": 10},
-    "var": "imgSizeInfo",
-    "grid": {"row":3, "column":4, "sticky":["E"]}
+    "grid": {"row":3, "column":0, "columnspan":6, "sticky":["W"]}
   }
 }

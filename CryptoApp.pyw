@@ -85,7 +85,9 @@ class RootWindow(ttk.Frame):
         self.master.minsize(400, 650)
 
     def help_about(self):
-        messagebox.showinfo('关于', 'CF工具箱V1.0')  # 弹出消息提示框
+        messagebox.showinfo('关于', 'Crypto工具箱\n'
+                            '简单的加密解密GUI程序，使用Python3+Tkinter实现。\n'
+                            'https://github.com/cforth/CryptoApp')  # 弹出消息提示框
 
 
 if __name__ == '__main__':

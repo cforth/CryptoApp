@@ -18,7 +18,7 @@ class Window(ttk.Frame):
         # 从json自动绑定事件
         create_all_binds(self, ui_json)
         # 支持的图片格式后缀
-        self.img_ext = [".bmp", ".gif", ".jpg", ".png", ".tiff", ".ico"]
+        self.img_ext = [".bmp", ".gif", ".jpg", ".png", ".tiff", ".ico", ".jpeg"]
         # 存储GIF动图对象，若不存储，图片对象会被垃圾回收无法显示
         self.gif = None
         # 存储静态图片对象，若不存储，图片对象会被垃圾回收无法显示
@@ -32,11 +32,11 @@ class Window(ttk.Frame):
         # 设置单页显示
         set_combobox_item(self.__dict__["pageOptionCombobox"], "单页", True)
         # 设置双页阅读顺序
-        set_combobox_item(self.__dict__["orderOptionCombobox"], "左|右", True)
+        set_combobox_item(self.__dict__["orderOptionCombobox"], "左开", True)
         # 设置图片最大的宽度(gif图片不能缩放)
         self.img_max_width = 1280
         # 设置默认的图片宽度，并设置图片大小滑动条的位置
-        self.img_width = self.img_max_width * 0.6
+        self.img_width = self.img_max_width * 0.45
         # 图片需要逆时针旋转的角度
         self.rotate_angle = 0
         self.__dict__["imgSizeScale"].set(self.img_width * 100 / self.img_max_width)
@@ -82,10 +82,10 @@ class Window(ttk.Frame):
             self.__dict__["imgInfo"].set(index_str + " | " + img_name)
 
     def key_event(self, event=None):
-        # 右方向键下一首
+        # 右方向键下一张图片
         if event.keycode == 39:
             self.next_img_button_callback()
-        # 左方向键上一首
+        # 左方向键上一张图片
         elif event.keycode == 37:
             self.prev_img_button_callback()
 
@@ -97,6 +97,11 @@ class Window(ttk.Frame):
             self.set_img_list()
             self.set_img_info()
             self.img_show()
+
+    # 重新加载图片
+    def refresh_button_callback(self, event=None):
+        self.set_img_info()
+        self.img_show()
 
     # 设置密码输入栏中的内容显示或者隐藏
     def password_show_button_callback(self, event=None):
@@ -221,10 +226,10 @@ class Window(ttk.Frame):
         next_y_s = int(next_y * next_x_s // next_x)
         # 将两张图片合并为一张图片
         to_image = Image.new('RGBA', (current_x_s + next_x_s, current_y_s if current_y_s > next_y_s else next_y_s))
-        if order_option == "左|右":
+        if order_option == "左开":
             to_image.paste(current_out, (0, 0))
             to_image.paste(next_out, (current_x_s, 0))
-        elif order_option == "右|左":
+        elif order_option == "右开":
             to_image.paste(next_out, (0, 0))
             to_image.paste(current_out, (next_x_s, 0))
         self.img = ImageTk.PhotoImage(to_image)
