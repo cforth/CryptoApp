@@ -11,7 +11,14 @@
     "var": "password",
     "int": {"width": 40},
     "string": {"show": "*"},
-    "grid": {"row":0, "column":1, "columnspan":2, "sticky":["W", "E"]}
+    "grid": {"row":0, "column":1, "sticky":["W", "E"]}
+  },
+  "orderOptionCombobox": {
+    "class": "Combobox",
+    "var": "orderOption",
+    "int": {"width": 10},
+    "string": {"state": ["readonly"], "values": ["左|右", "右|左"]},
+    "grid": {"row":0, "column":2, "sticky":["W", "E"]}
   },
   "pageOptionCombobox": {
     "class": "Combobox",
@@ -27,36 +34,36 @@
     "command": "file_from_button_callback",
     "grid": {"row":0, "column":4, "sticky":["W", "E"]}
   },
-  "prevImgButton": {
-    "class": "Button",
-    "string": {"text": "<"},
-    "command": "prev_img_button_callback",
-    "grid": {"row":1, "column":0, "sticky":["W", "N", "S"]}
-  },
-  "nextImgButton": {
-    "class": "Button",
-    "string": {"text": ">"},
-    "command": "next_img_button_callback",
-    "grid": {"row":1, "column":1, "sticky":["W", "N", "S"]}
-  },
-  "rotateImgButton": {
-    "class": "Button",
-    "string": {"text": "旋转"},
-    "command": "rotate_img_button_callback",
-    "grid": {"row":1, "column":2, "sticky":["W"]}
-  },
   "imgSizeNameLabel": {
     "class": "Label",
     "int": {"width": 10},
     "string": {"text": "调整大小"},
-    "grid": {"row":1, "column":3, "sticky":["E"]}
+    "grid": {"row":1, "column":0, "sticky":["E"]}
   },
   "imgSizeScale": {
     "class": "Scale",
     "string": {"orient": "horizontal"},
     "int": {"from_": 1, "to": 100},
     "bind": {"<ButtonRelease-1>": "set_img_width", "<B1-Motion>": "set_img_size_info"},
-    "grid": {"row":1, "column":4, "sticky":["W", "E"]}
+    "grid": {"row":1, "column":1, "sticky":["W", "E"]}
+  },
+  "prevImgButton": {
+    "class": "Button",
+    "string": {"text": "<"},
+    "command": "prev_img_button_callback",
+    "grid": {"row":1, "column":2, "sticky":["W", "N", "S"]}
+  },
+  "nextImgButton": {
+    "class": "Button",
+    "string": {"text": ">"},
+    "command": "next_img_button_callback",
+    "grid": {"row":1, "column":3, "sticky":["W", "N", "S"]}
+  },
+  "rotateImgButton": {
+    "class": "Button",
+    "string": {"text": "旋转"},
+    "command": "rotate_img_button_callback",
+    "grid": {"row":1, "column":4, "sticky":["W"]}
   },
   "imgLabel": {
     "class": "Label",

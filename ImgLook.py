@@ -31,6 +31,8 @@ class Window(ttk.Frame):
         self.init_default_crypto_option()
         # 设置单页显示
         set_combobox_item(self.__dict__["pageOptionCombobox"], "单页", True)
+        # 设置双页阅读顺序
+        set_combobox_item(self.__dict__["orderOptionCombobox"], "左|右", True)
         # 设置图片最大的宽度(gif图片不能缩放)
         self.img_max_width = 1280
         # 设置默认的图片宽度，并设置图片大小滑动条的位置
@@ -207,6 +209,8 @@ class Window(ttk.Frame):
 
     # 双页静态图片显示
     def default_double_img_show(self, img_path, next_img_path):
+        # 双页显示的顺序设定
+        order_option = self.__dict__["orderOption"].get()
         current_out = self.default_img_read(img_path)
         next_out = self.default_img_read(next_img_path)
         current_x, current_y = current_out.size
@@ -217,8 +221,12 @@ class Window(ttk.Frame):
         next_y_s = int(next_y * next_x_s // next_x)
         # 将两张图片合并为一张图片
         to_image = Image.new('RGBA', (current_x_s + next_x_s, current_y_s if current_y_s > next_y_s else next_y_s))
-        to_image.paste(current_out, (0, 0))
-        to_image.paste(next_out, (current_x_s, 0))
+        if order_option == "左|右":
+            to_image.paste(current_out, (0, 0))
+            to_image.paste(next_out, (current_x_s, 0))
+        elif order_option == "右|左":
+            to_image.paste(next_out, (0, 0))
+            to_image.paste(current_out, (next_x_s, 0))
         self.img = ImageTk.PhotoImage(to_image)
         self.__dict__["imgLabel"].configure(image=self.img)
 
