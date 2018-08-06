@@ -3,7 +3,7 @@
     "class": "Combobox",
     "var": "fileFromOption",
     "int": {"width": 10},
-    "string": {"state": ["readonly"], "values": ["文件", "文件夹"]},
+    "string": {"state": ["readonly"], "values": ["文件", "文件夹", "字符串"]},
     "grid": {"row":0, "column":0, "sticky":["W", "E"]}
   },
   "fileFromButton": {
@@ -17,7 +17,6 @@
     "class": "Entry",
     "var": "file_from_path",
     "int": {"width": 40},
-    "string": {"state": ["readonly"]},
     "grid": {"row":0, "column":2, "sticky":["W", "E"]}
   },
   "MD5GenerateButton": {

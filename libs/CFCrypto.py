@@ -367,3 +367,10 @@ def get_file_md5(filename):
             my_hash.update(b)
 
     return my_hash.hexdigest()
+
+
+# 字符串MD5生成
+def get_str_md5(string):
+    my_hash = hashlib.md5()
+    my_hash.update(string.encode('utf-8'))
+    return my_hash.hexdigest()

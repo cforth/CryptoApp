@@ -2,7 +2,7 @@ import os
 from threading import Thread
 import tkinter.filedialog as filedialog
 from libs.json2gui import *
-from libs.CFCrypto import get_file_md5
+from libs.CFCrypto import get_file_md5, get_str_md5
 
 
 # 窗口类
@@ -35,8 +35,15 @@ class Window(ttk.Frame):
         self.__dict__["MD5GenerateButton"]["state"] = "normal"
         self.__dict__["MD5GenerateButton"]["text"] = "MD5生成"
 
-    def show_md5_info(self, file_name, result_text):
+    def show_file_md5_info(self, file_name, result_text):
         self.__dict__["MD5ResultText"].insert('end', "文件路径: " + file_name)
+        self.__dict__["MD5ResultText"].insert('end', "\n")
+        self.__dict__["MD5ResultText"].insert('end', "MD5值: ")
+        self.__dict__["MD5ResultText"].insert('end', result_text)
+        self.__dict__["MD5ResultText"].insert('end', "\n\n")
+
+    def show_str_md5_info(self, string, result_text):
+        self.__dict__["MD5ResultText"].insert('end', "文本: " + string)
         self.__dict__["MD5ResultText"].insert('end', "\n")
         self.__dict__["MD5ResultText"].insert('end', "MD5值: ")
         self.__dict__["MD5ResultText"].insert('end', result_text)
@@ -45,7 +52,7 @@ class Window(ttk.Frame):
     def file_md5_generate(self, file_path):
         self.disable_button()
         result_text = get_file_md5(file_path)
-        self.show_md5_info(file_path, result_text)
+        self.show_file_md5_info(file_path, result_text)
         self.allow_button()
 
     def dir_md5_generate(self, dir_path):
@@ -53,6 +60,10 @@ class Window(ttk.Frame):
             for f in files:
                 file_path = os.path.join(os.path.abspath(path), f)
                 self.file_md5_generate(file_path)
+
+    def str_md5_generate(self, string):
+        result_text = get_str_md5(string)
+        self.show_str_md5_info(string, result_text)
 
     def file_from_button_callback(self, event=None):
         if self.__dict__["fileFromOption"].get() == "文件":
@@ -74,6 +85,11 @@ class Window(ttk.Frame):
             else:
                 md5_gen_thread = Thread(target=self.dir_md5_generate, args=(file_name,))
                 md5_gen_thread.start()
+        elif self.__dict__["fileFromOption"].get() == "字符串":
+            if not file_name:
+                return
+            else:
+                self.str_md5_generate(file_name)
 
 
 if __name__ == '__main__':
