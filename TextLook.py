@@ -8,6 +8,32 @@ from libs.CFCrypto import StringCrypto
 logging.basicConfig(level=logging.ERROR)
 
 
+# 文本选中时的处理
+class TextSection(object):
+    def __init__(self, master_widget, text_area):
+        self.master_widget = master_widget
+        self.text_area = text_area
+
+    def on_paste(self):
+        try:
+            self.text = self.master_widget.clipboard_get()
+        except tk.TclError:
+            pass
+        self.text_area.insert(tk.INSERT, self.text)
+
+    def on_copy(self):
+        self.text = self.text_area.get('sel.first', 'sel.last')
+        self.master_widget.clipboard_clear()
+        self.master_widget.clipboard_append(self.text)
+
+    def on_cut(self):
+        self.on_copy()
+        try:
+            self.text_area.delete('sel.first', 'sel.last')
+        except tk.TclError:
+            pass
+
+
 # 窗口类
 class Window(ttk.Frame):
     def __init__(self, ui_json, master=None):
@@ -24,11 +50,28 @@ class Window(ttk.Frame):
         set_combobox_item(self.__dict__["cryptoOptionCombobox"], "没有密码", True)
         self.current_file_path = None
         self.file_text = None
+        # 设置文本区右键菜单
+        self.menu = tk.Menu(self, tearoff=0)
+        self.set_text_section()
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
+
+    # 弹出菜单
+    def popupmenu(self, event):
+        self.menu.post(event.x_root, event.y_root)
+
+    # 设置文本选中时的右键菜单
+    def set_text_section(self):
+        self.section = TextSection(self, self.__dict__["fileShowText"])
+        self.menu.add_command(label="复制", command=self.section.on_copy)
+        self.menu.add_separator()
+        self.menu.add_command(label="粘贴", command=self.section.on_paste)
+        self.menu.add_separator()
+        self.menu.add_command(label="剪切", command=self.section.on_cut)
+        self.__dict__["fileShowText"].bind("<Button-3>", self.popupmenu)
 
     def file_from_button_callback(self, event=None):
         self.current_file_path = filedialog.askopenfilename()
