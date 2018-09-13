@@ -458,7 +458,11 @@ class DirShowHandle(threading.Thread):
         self.main_window.event_generate("<<DisableCrypto>>", when="tail")
         [self.tree.delete(item) for item in self.tree.get_children()]
         abspath = os.path.abspath(self.f_path)
-        root_node = self.tree.insert('', 'end', text=self.name_handle_func(os.path.split(abspath)[1]), open=True)
+        try:
+            root_node = self.tree.insert('', 'end', text=self.name_handle_func(os.path.split(abspath)[1]), open=True)
+        except Exception as e:
+            logging.warning("Convert error: ", e)
+            root_node = self.tree.insert('', 'end', text="输入格式或者密码错误！", open=True)
         self.process_directory(root_node, abspath, self.name_handle_func)
         self.main_window.event_generate("<<AllowCrypto>>", when="tail")
 
@@ -470,7 +474,11 @@ class DirShowHandle(threading.Thread):
                 abspath = os.path.join(path, p)
                 # 是否存在子目录
                 isdir = os.path.isdir(abspath)
-                name = name_handle_func(p)
+                try:
+                    name = name_handle_func(p)
+                except Exception as e:
+                    logging.warning("Convert error: ", e)
+                    name = "输入格式或者密码错误！"
                 # 将文件地址加入tree的item的values中
                 oid = self.tree.insert(parent, 'end', text=name, values=[abspath], open=False)
                 if isdir:
