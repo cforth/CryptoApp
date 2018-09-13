@@ -8,6 +8,7 @@ import time
 from threading import Thread
 from libs.Util import *
 from libs.CFCrypto import *
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -62,7 +63,13 @@ class Window(ttk.Frame):
         self.tree_menu = tk.Menu(self, tearoff=0)
         self.tree_menu.add_command(label="复制地址", command=self.on_copy_file_path)
         self.tree_menu.add_separator()
-
+        # 输入框右键菜单
+        self.entry_menu = tk.Menu(self, tearoff=0)
+        self.entry_menu.add_command(label="复制", command=self.on_entry_copy)
+        self.entry_menu.add_separator()
+        self.entry_menu.add_command(label="粘贴", command=self.on_entry_paste)
+        self.entry_menu.add_separator()
+        self.entry_menu.add_command(label="剪切", command=self.on_entry_cut)
 
     # 将控件布局
     def create_layout(self):
@@ -96,7 +103,11 @@ class Window(ttk.Frame):
         # 绑定自定义事件给主窗口
         self.bind("<<DisableCrypto>>", self.disable_crypto_button)
         self.bind("<<AllowCrypto>>", self.allow_crypto_button)
-        self.tree.bind("<Button-3>", self.popupmenu)
+        self.tree.bind("<Button-3>", self.pop_tree_menu)
+        self.textFromEntry.bind("<FocusIn>", self.get_current_widget)
+        self.textToEntry.bind("<FocusIn>", self.get_current_widget)
+        self.textFromEntry.bind("<Button-3>", self.pop_entry_menu)
+        self.textToEntry.bind("<Button-3>", self.pop_entry_menu)
 
     # 填充下拉列表选项
     def populate_comboboxes(self):
@@ -111,9 +122,17 @@ class Window(ttk.Frame):
         set_combobox_item(self.nameCryptoOptionCombobox, "修改文件名", True)
         self.nameCryptoOptionCombobox["state"] = "disable"
 
-    # 弹出菜单
-    def popupmenu(self, event):
+    # 获取当前事件的控件
+    def get_current_widget(self, event):
+        self.current_widget = event.widget
+
+    # 弹出TreeView菜单
+    def pop_tree_menu(self, event):
         self.tree_menu.post(event.x_root, event.y_root)
+
+    # 弹出输入框菜单
+    def pop_entry_menu(self, event):
+        self.entry_menu.post(event.x_root, event.y_root)
 
     # 复制选中的文件地址到剪贴板
     def on_copy_file_path(self):
@@ -121,6 +140,33 @@ class Window(ttk.Frame):
         file_select_path = item_values[0] if item_values else ""
         self.clipboard_clear()
         self.clipboard_append(file_select_path)
+
+    # 剪贴板上的字符串粘贴到Entry中
+    def on_entry_paste(self):
+        text = ""
+        try:
+            text = self.clipboard_get()
+        except tk.TclError:
+            pass
+        try:
+            self.current_widget.delete(0, 'end')
+        except tk.TclError:
+            pass
+        self.current_widget.insert(tk.INSERT, text)
+
+    # 复制Entry中的字符串到剪贴板
+    def on_entry_copy(self):
+        text = self.current_widget.get()
+        self.clipboard_clear()
+        self.clipboard_append(text)
+
+    # 剪切Entry中的字符串到剪贴板
+    def on_entry_cut(self):
+        self.on_entry_copy()
+        try:
+            self.current_widget.delete(0, 'end')
+        except tk.TclError:
+            pass
 
     # 禁用加密解密按钮
     def disable_crypto_button(self, event=None):
@@ -204,7 +250,8 @@ class Window(ttk.Frame):
                 self.process_var.set(process_scale * max_position)
                 self.process_label_var.set(str(int(process_scale * 100)) + " %   任务进行中...")
                 logging.info("Old ProcessBar position: %d  New ProcessBar position: %d"
-                         % (old_length * max_position / max_length, self.task_now_length * max_position / max_length))
+                             % (
+                             old_length * max_position / max_length, self.task_now_length * max_position / max_length))
                 old_length = self.task_now_length
             elif self.task_now_length == max_length:
                 self.process_var.set(max_position)
