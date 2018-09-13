@@ -58,6 +58,11 @@ class Window(ttk.Frame):
         self.tree.configure(yscroll=self.ysb.set, xscroll=self.xsb.set)
         self.tree.heading('#0', text="预览窗口", anchor='w')
         self.tree.column("#0", anchor="w")
+        # 文件浏览器区右键菜单
+        self.tree_menu = tk.Menu(self, tearoff=0)
+        self.tree_menu.add_command(label="复制地址", command=self.on_copy_file_path)
+        self.tree_menu.add_separator()
+
 
     # 将控件布局
     def create_layout(self):
@@ -91,6 +96,7 @@ class Window(ttk.Frame):
         # 绑定自定义事件给主窗口
         self.bind("<<DisableCrypto>>", self.disable_crypto_button)
         self.bind("<<AllowCrypto>>", self.allow_crypto_button)
+        self.tree.bind("<Button-3>", self.popupmenu)
 
     # 填充下拉列表选项
     def populate_comboboxes(self):
@@ -104,6 +110,17 @@ class Window(ttk.Frame):
         set_combobox_item(self.dataOptionCombobox, "字符串", True)
         set_combobox_item(self.nameCryptoOptionCombobox, "修改文件名", True)
         self.nameCryptoOptionCombobox["state"] = "disable"
+
+    # 弹出菜单
+    def popupmenu(self, event):
+        self.tree_menu.post(event.x_root, event.y_root)
+
+    # 复制选中的文件地址到剪贴板
+    def on_copy_file_path(self):
+        item_values = self.tree.item(self.tree.selection()[0])['values']
+        file_select_path = item_values[0] if item_values else ""
+        self.clipboard_clear()
+        self.clipboard_append(file_select_path)
 
     # 禁用加密解密按钮
     def disable_crypto_button(self, event=None):
@@ -407,7 +424,8 @@ class DirShowHandle(threading.Thread):
                 # 是否存在子目录
                 isdir = os.path.isdir(abspath)
                 name = name_handle_func(p)
-                oid = self.tree.insert(parent, 'end', text=name, open=False)
+                # 将文件地址加入tree的item的values中
+                oid = self.tree.insert(parent, 'end', text=name, values=[abspath], open=False)
                 if isdir:
                     self.process_directory(oid, abspath, name_handle_func)
         else:
