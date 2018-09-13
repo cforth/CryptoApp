@@ -19,6 +19,10 @@ class TextSection(object):
             self.text = self.master_widget.clipboard_get()
         except tk.TclError:
             pass
+        try:
+            self.text_area.delete('sel.first', 'sel.last')
+        except tk.TclError:
+            pass
         self.text_area.insert(tk.INSERT, self.text)
 
     def on_copy(self):
