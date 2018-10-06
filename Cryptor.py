@@ -478,12 +478,12 @@ class DirShowHandle(threading.Thread):
         self.process_directory(root_node, abspath, self.name_handle_func)
         self.main_window.event_generate("<<AllowCrypto>>", when="tail")
 
-    def process_directory(self, parent, path, name_handle_func):
-        if os.path.isdir(path):
+    def process_directory(self, parent, f_path, name_handle_func):
+        if os.path.isdir(f_path):
             # 遍历路径下的子目录
-            for p in os.listdir(path):
+            for p in os.listdir(f_path):
                 # 构建路径
-                abspath = os.path.join(path, p)
+                abspath = os.path.join(f_path, p)
                 # 是否存在子目录
                 isdir = os.path.isdir(abspath)
                 try:
@@ -496,8 +496,8 @@ class DirShowHandle(threading.Thread):
                 if isdir:
                     self.process_directory(oid, abspath, name_handle_func)
         else:
-            name = name_handle_func(os.path.basename(path))
-            self.tree.insert(parent, 'end', text=name, open=False)
+            name = name_handle_func(os.path.basename(f_path))
+            self.tree.insert(parent, 'end', text=name, values=[f_path], open=False)
 
 
 if __name__ == '__main__':
