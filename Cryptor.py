@@ -5,6 +5,7 @@ import tkinter.messagebox as tkmessagebox
 import logging
 import threading
 import time
+import subprocess
 from threading import Thread
 from libs.Util import *
 from libs.CFCrypto import *
@@ -63,6 +64,7 @@ class Window(ttk.Frame):
         self.tree_menu = tk.Menu(self, tearoff=0)
         self.tree_menu.add_command(label="复制地址", command=self.on_copy_file_path)
         self.tree_menu.add_separator()
+        self.tree_menu.add_command(label="打开文件夹", command=self.on_open_dir_path)
         # 输入框右键菜单
         self.entry_menu = tk.Menu(self, tearoff=0)
         self.entry_menu.add_command(label="复制", command=self.on_entry_copy)
@@ -140,6 +142,16 @@ class Window(ttk.Frame):
         file_select_path = item_values[0] if item_values else ""
         self.clipboard_clear()
         self.clipboard_append(file_select_path)
+
+    # 打开文件所在的文件夹
+    def on_open_dir_path(self):
+        item_values = self.tree.item(self.tree.selection()[0])['values']
+        file_select_path = item_values[0] if item_values else ""
+        if os.name == "nt":
+            subprocess.Popen('explorer.exe /select, "%s"' % file_select_path)
+        elif os.name == "posix":
+            # linux系统的功能待完成
+            pass
 
     # 剪贴板上的字符串粘贴到Entry中
     def on_entry_paste(self):
