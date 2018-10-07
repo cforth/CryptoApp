@@ -118,6 +118,9 @@ class Window(ttk.Frame):
             self.__dict__["fileShowText"].insert('end', self.file_text)
 
     def file_save(self, file_path):
+        if not file_path:
+            tkmessagebox.showerror("错误", "文件保存路径不存在！")
+            return
         crypto_option = self.__dict__["cryptoOption"].get()
         save_text = self.__dict__["fileShowText"].get(0.0, 'end')
 
