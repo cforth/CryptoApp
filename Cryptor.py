@@ -496,7 +496,11 @@ class DirShowHandle(threading.Thread):
                 if isdir:
                     self.process_directory(oid, abspath, name_handle_func)
         else:
-            name = name_handle_func(os.path.basename(f_path))
+            try:
+                name = name_handle_func(os.path.basename(f_path))
+            except Exception as e:
+                logging.warning("Convert error: ", e)
+                name = "输入格式或者密码错误！"
             self.tree.insert(parent, 'end', text=name, values=[f_path], open=False)
 
 
