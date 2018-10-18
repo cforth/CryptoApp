@@ -61,7 +61,7 @@ class Window(ttk.Frame):
         self.master.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(1, weight=1)
-        self.rowconfigure(2, weight=1)
+        self.rowconfigure(1, weight=1)
 
     # 弹出菜单
     def popupmenu(self, event):
@@ -133,7 +133,12 @@ class Window(ttk.Frame):
 
         with open(file_path, "w") as f:
             f.write(save_text)
-            self.__dict__["fileSaveStatus"].set("[已保存]")
+
+        self.__dict__["fileSaveStatus"].set("[已保存]")
+        self.after(2000, self.clear_save_status)
+
+    def clear_save_status(self):
+        self.__dict__["fileSaveStatus"].set("")
 
 
 if __name__ == '__main__':
