@@ -66,5 +66,12 @@
     "var": "fileSaveStatus",
     "int": {"width": 10},
     "grid": {"row":3, "column":3, "sticky":["W", "E"]}
+  },
+  "textSizeOptionCombobox": {
+    "class": "Combobox",
+    "var": "textSizeOption",
+    "int": {"width": 10},
+    "string": {"state": ["readonly"], "values": ["75%", "100%", "150%", "200%"]},
+    "grid": {"row":3, "column":4, "sticky":["W", "E"]}
   }
 }

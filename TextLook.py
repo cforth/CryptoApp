@@ -6,6 +6,7 @@ from libs.json2gui import *
 from libs.CFCrypto import StringCrypto
 
 logging.basicConfig(level=logging.ERROR)
+TEXT_DEFAULT_SIZE = 12
 
 
 # 文本选中时的处理
@@ -52,6 +53,9 @@ class Window(ttk.Frame):
                       self.__dict__["TextScrollbarY"])
         # 设置下拉列表默认值
         set_combobox_item(self.__dict__["cryptoOptionCombobox"], "没有密码", True)
+        set_combobox_item(self.__dict__["textSizeOptionCombobox"], "100%", True)
+        self.__dict__["textSizeOptionCombobox"].bind("<<ComboboxSelected>>", self.set_text_size)
+        self.text_size = TEXT_DEFAULT_SIZE
         self.current_file_path = None
         self.file_text = None
         # 设置文本区右键菜单
@@ -76,6 +80,14 @@ class Window(ttk.Frame):
         self.menu.add_separator()
         self.menu.add_command(label="剪切", command=self.section.on_cut)
         self.__dict__["fileShowText"].bind("<Button-3>", self.popupmenu)
+
+    # 设置文本字体大小
+    def set_text_size(self, event=None):
+        text_font_info_dict = {"75%": TEXT_DEFAULT_SIZE * 0.75, "100%": TEXT_DEFAULT_SIZE,
+                               "150%": TEXT_DEFAULT_SIZE * 1.5, "200%": TEXT_DEFAULT_SIZE * 2}
+        self.text_size = text_font_info_dict[self.__dict__["textSizeOption"].get()]
+        text_font = "sans-serif %u" % self.text_size
+        self.__dict__["fileShowText"].configure(font=text_font)
 
     def file_from_button_callback(self, event=None):
         self.current_file_path = filedialog.askopenfilename()
@@ -116,6 +128,7 @@ class Window(ttk.Frame):
                 self.__dict__["fileCryptoStatus"].set("")
 
             self.__dict__["fileShowText"].insert('end', self.file_text)
+            self.set_text_size()
 
     def file_save(self, file_path):
         if not file_path:
