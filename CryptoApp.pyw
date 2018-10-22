@@ -95,4 +95,10 @@ if __name__ == '__main__':
     master = tk.Tk()
     mb = RootWindow(master)
     mb.crypto()
+    try:
+        # 设置窗口图标
+        mb.master.iconbitmap('CryptoApp.ico')
+    except Exception as e:
+        # 忽略图片设置的错误
+        pass
     master.mainloop()
