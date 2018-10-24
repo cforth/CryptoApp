@@ -3,6 +3,7 @@ from threading import Thread
 import tkinter.filedialog as filedialog
 from libs.json2gui import *
 from libs.CFCrypto import get_file_md5, get_str_md5
+from libs.Util import TextSection
 
 
 # 窗口类
@@ -19,11 +20,28 @@ class Window(ttk.Frame):
                       self.__dict__["TextScrollbarY"])
         # 设置默认的选项
         set_combobox_item(self.__dict__["fileFromOptionCombobox"], "文件", True)
+        # 设置文本区右键菜单
+        self.menu = tk.Menu(self, tearoff=0)
+        self.set_text_section()
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(2, weight=1)
         self.rowconfigure(1, weight=1)
+
+    # 弹出菜单
+    def popupmenu(self, event):
+        self.menu.post(event.x_root, event.y_root)
+
+    # 设置文本选中时的右键菜单
+    def set_text_section(self):
+        self.section = TextSection(self, self.__dict__["MD5ResultText"])
+        self.menu.add_command(label="复制", command=self.section.on_copy)
+        self.menu.add_separator()
+        self.menu.add_command(label="粘贴", command=self.section.on_paste)
+        self.menu.add_separator()
+        self.menu.add_command(label="剪切", command=self.section.on_cut)
+        self.__dict__["MD5ResultText"].bind("<Button-3>", self.popupmenu)
 
     # 禁用按钮
     def disable_button(self):

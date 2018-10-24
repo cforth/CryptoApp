@@ -4,39 +4,10 @@ import tkinter.filedialog as filedialog
 import tkinter.messagebox as tkmessagebox
 from libs.json2gui import *
 from libs.CFCrypto import StringCrypto
+from libs.Util import TextSection
 
 logging.basicConfig(level=logging.ERROR)
 TEXT_DEFAULT_SIZE = 12
-
-
-# 文本选中时的处理
-class TextSection(object):
-    def __init__(self, master_widget, text_area):
-        self.master_widget = master_widget
-        self.text_area = text_area
-
-    def on_paste(self):
-        try:
-            self.text = self.master_widget.clipboard_get()
-        except tk.TclError:
-            pass
-        try:
-            self.text_area.delete('sel.first', 'sel.last')
-        except tk.TclError:
-            pass
-        self.text_area.insert(tk.INSERT, self.text)
-
-    def on_copy(self):
-        self.text = self.text_area.get('sel.first', 'sel.last')
-        self.master_widget.clipboard_clear()
-        self.master_widget.clipboard_append(self.text)
-
-    def on_cut(self):
-        self.on_copy()
-        try:
-            self.text_area.delete('sel.first', 'sel.last')
-        except tk.TclError:
-            pass
 
 
 # 窗口类

@@ -1,4 +1,5 @@
 import os
+import tkinter as tk
 
 
 # 计算文件夹内的文件个数
@@ -27,4 +28,31 @@ def is_sub_path(output_path, input_path):
         return False
 
 
+# 文本选中时的处理
+class TextSection(object):
+    def __init__(self, master_widget, text_area):
+        self.master_widget = master_widget
+        self.text_area = text_area
 
+    def on_paste(self):
+        try:
+            self.text = self.master_widget.clipboard_get()
+        except tk.TclError:
+            pass
+        try:
+            self.text_area.delete('sel.first', 'sel.last')
+        except tk.TclError:
+            pass
+        self.text_area.insert(tk.INSERT, self.text)
+
+    def on_copy(self):
+        self.text = self.text_area.get('sel.first', 'sel.last')
+        self.master_widget.clipboard_clear()
+        self.master_widget.clipboard_append(self.text)
+
+    def on_cut(self):
+        self.on_copy()
+        try:
+            self.text_area.delete('sel.first', 'sel.last')
+        except tk.TclError:
+            pass
