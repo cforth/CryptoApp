@@ -33,6 +33,10 @@ class Window(ttk.Frame):
         # 从json自动绑定事件
         create_all_binds(self, ui_json)
         set_combobox_item(self.__dict__["passLevelCombobox"], "中等", True)
+        # 设置滚动条
+        set_scrollbar(self.__dict__["resultText"],
+                      self.__dict__["TextScrollbarX"],
+                      self.__dict__["TextScrollbarY"])
         # 设置文本区右键菜单
         self.menu = tk.Menu(self, tearoff=0)
         self.set_text_section()
