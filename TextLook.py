@@ -32,6 +32,7 @@ class Window(ttk.Frame):
         # 设置文本区右键菜单
         self.menu = tk.Menu(self, tearoff=0)
         self.set_text_section()
+        self.set_text_size()
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
