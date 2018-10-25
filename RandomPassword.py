@@ -40,6 +40,7 @@ class Window(ttk.Frame):
         # 设置文本区右键菜单
         self.menu = tk.Menu(self, tearoff=0)
         self.set_text_section()
+        self.__dict__["pass_number"].set("1")
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
@@ -60,8 +61,22 @@ class Window(ttk.Frame):
         self.menu.add_command(label="剪切", command=self.section.on_cut)
         self.__dict__["resultText"].bind("<Button-3>", self.popupmenu)
 
+    def print_info(self, level, length, number):
+        self.__dict__["resultText"].insert('end', "复杂度：%s，长度：%d，个数：%d，随机密码：\n" % (level, length, number))
+
     def generate_password_button_callback(self, event=None):
-        length = int(self.__dict__["pass_length"].get())
+        try:
+            pass_length = int(self.__dict__["pass_length"].get())
+            pass_number = int(self.__dict__["pass_number"].get())
+        except Exception as e:
+            return
+
+        if pass_length <= 0 or pass_length > 256:
+            return
+
+        if pass_number <= 0 or pass_number > 256:
+            return
+
         level = MEDIUM_LEVEL
         level_text = self.__dict__["pass_level"].get()
 
@@ -70,8 +85,10 @@ class Window(ttk.Frame):
         elif level_text == "复杂":
             level = HIGH_LEVEL
 
-        password = generate_password(length, level)
-        self.__dict__["resultText"].insert('end', password)
+        self.print_info(level_text, pass_length, pass_number)
+        for n in range(0, pass_number):
+            password = generate_password(pass_length, level)
+            self.__dict__["resultText"].insert('end', "%s\n" % password)
         self.__dict__["resultText"].insert('end', "\n")
 
 
