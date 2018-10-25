@@ -54,11 +54,15 @@ def file_split(file_path, output_file_path, size):
     with open(file_path, 'rb') as f:
         for i in range(0, num):
             index += 1
-            data = f.read(size)
-            if not data:
-                break
-            with open(output_file_path + '.' + str(index), 'ab') as out:
-                out.write(data)
+            # 每次读取size_block大小的数据，防止内存不够
+            size_block = 10 * 1024 * 1024
+            size_block_num = size // size_block if size % size_block == 0 else (size // size_block) + 1
+            for x in range(0, size_block_num):
+                data = f.read(size_block)
+                if not data:
+                    break
+                with open(output_file_path + '.' + str(index), 'ab') as out:
+                    out.write(data)
 
 
 def file_merge(file_path, output_file_path, num):
@@ -68,7 +72,12 @@ def file_merge(file_path, output_file_path, num):
     with open(output_file_path, 'ab') as out:
         for i in range(1, num + 1):
             with open(file_path + '.' + str(i), 'rb') as f:
-                data = f.read()
-                if not data:
-                    break
-                out.write(data)
+                size = os.path.getsize(file_path + '.' + str(i))
+                # 每次读取size_block大小的数据，防止内存不够
+                size_block = 10 * 1024 * 1024
+                size_block_num = size // size_block if size % size_block == 0 else (size // size_block) + 1
+                for x in range(0, size_block_num):
+                    data = f.read(size_block)
+                    if not data:
+                        break
+                    out.write(data)
