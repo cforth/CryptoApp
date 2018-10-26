@@ -16,6 +16,10 @@ class Window(ttk.Frame):
         # 绑定自定义事件给主窗口
         self.bind("<<WorkStart>>", self.disable_button)
         self.bind("<<WorkStop>>", self.allow_button)
+        # 设置滚动条
+        set_scrollbar(self.__dict__["resultText"],
+                      self.__dict__["TextScrollbarX"],
+                      self.__dict__["TextScrollbarY"])
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(1, weight=1)
         self.master.columnconfigure(0, weight=1)
@@ -39,7 +43,11 @@ class Window(ttk.Frame):
         file_path = filedialog.askdirectory()
         self.__dict__["file_to"].set(file_path)
 
-    # 文件分割与合并处理
+    def print_info(self, split_option, split_counter, file_from_path, file_to_dir):
+        info = "类型：%s，数量：%d，文件来源：%s，文件夹目标：%s\n\n" % (split_option, split_counter, file_from_path, file_to_dir)
+        self.__dict__["resultText"].insert('end', info)
+
+        # 文件分割与合并处理
     def file_handle(self, split_option, file_from_path, file_to_path, split_counter):
         # 发送消息给主窗口，禁用按钮
         self.event_generate("<<WorkStart>>", when="tail")
@@ -64,6 +72,7 @@ class Window(ttk.Frame):
         file_to_path = os.path.join(file_to_dir, os.path.split(file_from_path)[1])
         split_counter = int(self.__dict__["split_counter"].get())
         split_option = self.__dict__["split_option"].get()
+        self.print_info(split_option, split_counter, file_from_path, file_to_dir)
         work_thread = Thread(target=self.file_handle, args=(split_option, file_from_path, file_to_path, split_counter))
         work_thread.start()
 
