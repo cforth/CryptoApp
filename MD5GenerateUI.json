@@ -29,6 +29,7 @@
   "MD5ResultText": {
     "class": "Text",
     "int": {"width": 60, "height": 20},
+    "string": {"wrap": "none"},
     "grid": {"row":1, "column":0, "columnspan":4, "sticky":["W", "E", "N", "S"]}
   },
   "TextScrollbarY": {

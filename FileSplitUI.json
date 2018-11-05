@@ -54,6 +54,7 @@
   "resultText": {
     "class": "Text",
     "int": {"width": 60, "height": 20},
+    "string": {"wrap": "none"},
     "grid": {"row":4, "column":0, "columnspan":2, "sticky":["W", "E", "N", "S"]}
   },
   "TextScrollbarY": {
