@@ -62,9 +62,11 @@ class Window(ttk.Frame):
         self.__dict__["fileShowText"].configure(font=text_font)
 
     def file_from_button_callback(self, event=None):
-        self.current_file_path = filedialog.askopenfilename()
-        self.__dict__["filePath"].set(self.current_file_path)
-        self.file_show()
+        current_file_path = filedialog.askopenfilename()
+        if current_file_path:
+            self.current_file_path = current_file_path
+            self.__dict__["filePath"].set(self.current_file_path)
+            self.file_show()
 
     def file_save_button_callback(self, event=None):
         self.file_save(self.current_file_path)
