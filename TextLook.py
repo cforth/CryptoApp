@@ -26,6 +26,8 @@ class Window(ttk.Frame):
         set_combobox_item(self.__dict__["cryptoOptionCombobox"], "没有密码", True)
         set_combobox_item(self.__dict__["textSizeOptionCombobox"], "100%", True)
         self.__dict__["textSizeOptionCombobox"].bind("<<ComboboxSelected>>", self.set_text_size)
+        set_combobox_item(self.__dict__["textWrapOptionCombobox"], "换行", True)
+        self.__dict__["textWrapOptionCombobox"].bind("<<ComboboxSelected>>", self.set_text_wrap)
         self.text_size = TEXT_DEFAULT_SIZE
         self.current_file_path = None
         self.file_text = None
@@ -37,7 +39,7 @@ class Window(ttk.Frame):
         self.master.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(1, weight=1)
-        self.rowconfigure(1, weight=1)
+        self.rowconfigure(2, weight=1)
 
     # 弹出菜单
     def popupmenu(self, event):
@@ -61,11 +63,18 @@ class Window(ttk.Frame):
         text_font = "sans-serif %u" % self.text_size
         self.__dict__["fileShowText"].configure(font=text_font)
 
+    # 设置文本自动换行或不换行
+    def set_text_wrap(self, event=None):
+        text_wrap_option = self.__dict__["textWrapOption"].get()
+        if text_wrap_option == "不换行":
+            self.__dict__["fileShowText"].configure(wrap="none")
+        else:
+            self.__dict__["fileShowText"].configure(wrap=tk.CHAR)
+
     def file_from_button_callback(self, event=None):
         current_file_path = filedialog.askopenfilename()
         if current_file_path:
             self.current_file_path = current_file_path
-            self.__dict__["filePath"].set(self.current_file_path)
             self.file_show()
 
     def file_save_button_callback(self, event=None):
@@ -74,13 +83,14 @@ class Window(ttk.Frame):
     def file_save_new_button_callback(self, event=None):
         new_file_path = os.path.abspath(filedialog.asksaveasfilename())
         self.file_save(new_file_path)
-        self.current_file_path = new_file_path
-        self.__dict__["filePath"].set(self.current_file_path)
 
     def file_show(self):
         if not os.path.isfile(self.current_file_path) or not self.current_file_path.endswith('.txt'):
+            logging.error("Text Format Error！！！")
+            tkmessagebox.showerror("错误", "文本格式错误！")
             return
 
+        self.__dict__["filePath"].set(self.current_file_path)
         crypto_option = self.__dict__["cryptoOption"].get()
         self.__dict__["fileShowText"].delete(0.0, 'end')
         with open(self.current_file_path, "r") as f:
@@ -101,11 +111,12 @@ class Window(ttk.Frame):
             else:
                 self.__dict__["fileCryptoStatus"].set("")
 
-            self.__dict__["fileShowText"].insert('end', self.file_text)
             self.set_text_size()
+            self.set_text_wrap()
+            self.__dict__["fileShowText"].insert('end', self.file_text)
 
     def file_save(self, file_path):
-        if not file_path:
+        if not file_path or os.path.isdir(file_path):
             tkmessagebox.showerror("错误", "文件保存路径不存在！")
             return
         crypto_option = self.__dict__["cryptoOption"].get()
@@ -122,6 +133,8 @@ class Window(ttk.Frame):
             f.write(save_text)
 
         self.__dict__["fileSaveStatus"].set("[已保存]")
+        self.current_file_path = file_path
+        self.__dict__["filePath"].set(self.current_file_path)
         self.after(2000, self.clear_save_status)
 
     def clear_save_status(self):
