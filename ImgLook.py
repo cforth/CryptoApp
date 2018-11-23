@@ -74,13 +74,33 @@ class Window(ttk.Frame):
 
     # 设置显示图片信息
     def set_img_info(self):
+        page_option = self.__dict__["pageOption"].get()
         if not self.img_list or self.current_img_path not in self.img_list:
-            self.__dict__["imgInfo"].set("")
-        else:
+            self.__dict__["imgInfoL"].set("")
+            self.__dict__["imgInfoR"].set("")
+        elif page_option == "单页":
             img_index = self.img_list.index(self.current_img_path)
             index_str = str(img_index + 1) + "/" + str(len(self.img_list))
             img_name = os.path.basename(self.current_img_path)
-            self.__dict__["imgInfo"].set(index_str + " | " + img_name)
+            self.__dict__["imgInfoL"].set(index_str + " | " + img_name)
+            self.__dict__["imgInfoR"].set("")
+        elif page_option == "双页":
+            img_index = self.img_list.index(self.current_img_path)
+            index_str = str(img_index + 1) + "/" + str(len(self.img_list))
+            img_name = os.path.basename(self.current_img_path)
+            if img_index < len(self.img_list) - 1:
+                img_index_next = img_index + 1
+                index_str_next = str(img_index_next + 1) + "/" + str(len(self.img_list))
+                img_name_next = os.path.basename(self.img_list[img_index_next])
+                order_option = self.__dict__["orderOption"].get()
+                if order_option == "左开":
+                    self.__dict__["imgInfoL"].set(index_str + " | " + img_name)
+                    self.__dict__["imgInfoR"].set(index_str_next + " | " + img_name_next)
+                else:
+                    self.__dict__["imgInfoR"].set(index_str + " | " + img_name)
+                    self.__dict__["imgInfoL"].set(index_str_next + " | " + img_name_next)
+            else:
+                self.__dict__["imgInfoL"].set(index_str + " | " + img_name)
 
     def key_event(self, event=None):
         # 右方向键下一张图片
@@ -280,7 +300,7 @@ class Window(ttk.Frame):
             decrypt_img_name = StringCrypto(self.__dict__["password"].get()).decrypt(img_name)
             # 如果图片后缀不支持，则直接返回
             if os.path.splitext(decrypt_img_name.lower())[1] not in self.img_ext:
-                self.__dict__["imgInfo"].set("文件格式不支持")
+                self.__dict__["imgInfoL"].set("文件格式不支持")
                 return
             if os.path.splitext(decrypt_img_name)[1] == ".gif":
                 self.crypto_gif_show(self.current_img_path)
@@ -297,7 +317,8 @@ class Window(ttk.Frame):
         elif crypto_option == "不需解密":
             # 如果图片后缀不支持，则直接返回
             if os.path.splitext(img_name.lower())[1] not in self.img_ext:
-                self.__dict__["imgInfo"].set("文件格式不支持")
+                self.__dict__["imgInfoL"].set("文件格式不支持")
+                self.__dict__["imgInfoR"].set("")
                 return
             if os.path.splitext(self.current_img_path)[1] == ".gif":
                 self.default_gif_show(self.current_img_path)
@@ -314,7 +335,8 @@ class Window(ttk.Frame):
         elif crypto_option == "解密保名":
             # 如果图片后缀不支持，则直接返回
             if os.path.splitext(img_name.lower())[1] not in self.img_ext:
-                self.__dict__["imgInfo"].set("文件格式不支持")
+                self.__dict__["imgInfoL"].set("文件格式不支持")
+                self.__dict__["imgInfoR"].set("")
                 return
             if os.path.splitext(self.current_img_path)[1] == ".gif":
                 self.crypto_gif_show(self.current_img_path)

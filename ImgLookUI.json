@@ -83,10 +83,16 @@
     "string": {"bg": "black"},
     "grid": {"row":2, "column":0, "columnspan":6, "sticky":["W", "E", "N", "S"]}
   },
-  "imgInfoLabel": {
+  "imgInfoLLabel": {
     "class": "Label",
-    "string": {"text": "图片信息"},
-    "var": "imgInfo",
-    "grid": {"row":3, "column":0, "columnspan":6, "sticky":["W"]}
+    "string": {"text": "图片信息L"},
+    "var": "imgInfoL",
+    "grid": {"row":3, "column":0, "columnspan":3, "sticky":["W"]}
+  },
+    "imgInfoRLabel": {
+    "class": "Label",
+    "string": {"text": "图片信息R"},
+    "var": "imgInfoR",
+    "grid": {"row":3, "column":3, "columnspan":3, "sticky":["E"]}
   }
 }
