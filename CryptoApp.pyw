@@ -27,11 +27,14 @@ class RootWindow(ttk.Frame):
         option_menu.add_command(label="MD5值", command=self.md5_gen)
         option_menu.add_command(label="加密解密", command=self.crypto)
         option_menu.add_separator()
-        option_menu.add_command(label="退出", command=self.master.quit)
+        option_menu.add_command(label="退出", command=self.quit_program)
 
         # 创建“帮助”下拉菜单
         help_menu = tk.Menu(self.menubar, tearoff=0)
         help_menu.add_command(label="关于", command=self.help_about)
+
+        # 绑定最顶层窗口的关闭按钮事件
+        self.master.protocol("WM_DELETE_WINDOW", self.quit_program)
 
         # 将前面菜单加到菜单栏
         self.menubar.add_cascade(label="功能", menu=option_menu)
@@ -89,6 +92,11 @@ class RootWindow(ttk.Frame):
         messagebox.showinfo('关于', 'Crypto工具箱\n'
                             '简单的加密解密GUI程序，使用Python3+Tkinter实现。\n'
                             'https://github.com/cforth/CryptoApp')  # 弹出消息提示框
+
+    def quit_program(self):
+        quit_result = tk.messagebox.askokcancel('提示', '真的要退出吗？')
+        if quit_result:
+            self.master.quit()
 
 
 if __name__ == '__main__':
