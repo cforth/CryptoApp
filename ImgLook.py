@@ -3,27 +3,73 @@ import os
 import logging
 import tkinter.filedialog as filedialog
 import tkinter.messagebox as tkmessagebox
-from libs.GifHandle import *
 from libs.json2gui import *
 from libs.CFCrypto import ByteCrypto, StringCrypto
+from libs.CFCanvas import CFCanvas
 
 logging.basicConfig(level=logging.INFO)
 
 
 # 窗口类
 class Window(ttk.Frame):
-    def __init__(self, ui_json, master=None):
-        super().__init__(master)
-        # 从json自动设置UI控件
-        create_ui(self, ui_json)
-        # 从json自动绑定事件
-        create_all_binds(self, ui_json)
+    def __init__(self, master=None):
+        super().__init__(master, padding=2)
+        self.cryptoOptionCombobox = ttk.Combobox(self, **{'state': ['readonly'], 'values': ['解密文件', '不需解密', '解密保名']},
+                                                 **{'width': 10})
+        self.cryptoOption = tk.StringVar()
+        self.cryptoOptionCombobox['textvariable'] = self.cryptoOption
+        self.cryptoOptionCombobox.grid(sticky=('w', 'e'), **{'row': 0, 'column': 0})
+        self.passwordEntry = tk.Entry(self, **{'show': '*'}, **{'width': 40})
+        self.password = tk.StringVar()
+        self.passwordEntry['textvariable'] = self.password
+        self.passwordEntry.grid(sticky=('w', 'e'), **{'row': 0, 'column': 1})
+        self.pageOptionCombobox = ttk.Combobox(self, **{'state': ['readonly'], 'values': ['单页', '双页']}, **{'width': 10})
+        self.pageOption = tk.StringVar()
+        self.pageOptionCombobox['textvariable'] = self.pageOption
+        self.pageOptionCombobox.grid(sticky=('w', 'e'), **{'row': 0, 'column': 2})
+        self.orderOptionCombobox = ttk.Combobox(self, **{'state': ['readonly'], 'values': ['左开', '右开']},
+                                                **{'width': 10})
+        self.orderOption = tk.StringVar()
+        self.orderOptionCombobox['textvariable'] = self.orderOption
+        self.orderOptionCombobox.grid(sticky=('w', 'e'), **{'row': 0, 'column': 3})
+        self.fileFromButton = ttk.Button(self, **{'text': '选择文件'}, **{'width': 10})
+        self.fileFromButton.grid(sticky=('w', 'e'), **{'row': 0, 'column': 4})
+        self.fileFromButton['command'] = self.file_from_button_callback
+        self.refreshButton = ttk.Button(self, **{'text': '重新加载'}, **{'width': 10})
+        self.refreshButton.grid(sticky=('w', 'e'), **{'row': 0, 'column': 5})
+        self.refreshButton['command'] = self.refresh_button_callback
+        self.imgSizeNameLabel = tk.Label(self, **{'text': '调整大小'}, **{'width': 10})
+        self.imgSizeNameLabel.grid(sticky=('e',), **{'row': 1, 'column': 0})
+        self.imgSizeScale = ttk.Scale(self, **{'orient': 'horizontal'}, **{'from_': 1, 'to': 100})
+        self.imgSizeScale.grid(sticky=('w', 'e'), **{'row': 1, 'column': 1})
+        self.imgSizeScale.bind('<ButtonRelease-1>', self.set_img_size)
+        self.imgSizeScale.bind('<B1-Motion>', self.set_img_size_info)
+        self.imgSizeInfoLabel = tk.Label(self, **{}, **{'width': 10})
+        self.imgSizeInfo = tk.StringVar()
+        self.imgSizeInfoLabel['textvariable'] = self.imgSizeInfo
+        self.imgSizeInfoLabel.grid(sticky=('w', 'e'), **{'row': 1, 'column': 2})
+        self.prevImgButton = ttk.Button(self, **{'text': '<'}, **{})
+        self.prevImgButton.grid(sticky=('w', 'n', 's'), **{'row': 1, 'column': 3})
+        self.prevImgButton['command'] = self.prev_img_button_callback
+        self.nextImgButton = ttk.Button(self, **{'text': '>'}, **{})
+        self.nextImgButton.grid(sticky=('w', 'n', 's'), **{'row': 1, 'column': 4})
+        self.nextImgButton['command'] = self.next_img_button_callback
+        self.rotateImgButton = ttk.Button(self, **{'text': '旋转'}, **{})
+        self.rotateImgButton.grid(sticky=('w',), **{'row': 1, 'column': 5})
+        self.rotateImgButton['command'] = self.rotate_img_button_callback
+        self.imgCanvas = CFCanvas(500, 500, self)
+        self.imgCanvas.grid(sticky=('w', 'e', 'n', 's'), **{'row': 2, 'column': 0, 'columnspan': 6})
+        self.imgInfoLLabel = tk.Label(self, **{'text': '图片信息L'}, **{})
+        self.imgInfoL = tk.StringVar()
+        self.imgInfoLLabel['textvariable'] = self.imgInfoL
+        self.imgInfoLLabel.grid(sticky=('w',), **{'row': 3, 'column': 0, 'columnspan': 3})
+        self.imgInfoRLabel = tk.Label(self, **{'text': '图片信息R'}, **{})
+        self.imgInfoR = tk.StringVar()
+        self.imgInfoRLabel['textvariable'] = self.imgInfoR
+        self.imgInfoRLabel.grid(sticky=('e',), **{'row': 3, 'column': 3, 'columnspan': 3})
+
         # 支持的图片格式后缀
         self.img_ext = [".bmp", ".gif", ".jpg", ".png", ".tiff", ".ico", ".jpeg"]
-        # 存储GIF动图对象，若不存储，图片对象会被垃圾回收无法显示
-        self.gif = None
-        # 存储静态图片对象，若不存储，图片对象会被垃圾回收无法显示
-        self.img = None
         # 存储图片地址列表，用于前后翻页
         self.img_list = []
         # 保存当前的图片路径
@@ -31,15 +77,17 @@ class Window(ttk.Frame):
         # 初始化下拉列表，设置默认值
         self.init_default_combobox_item()
         # 设置图片最大的宽度(gif图片不能缩放)
-        self.img_max_width = 1280
+        self.img_max_width = 1960
         # 设置默认的图片宽度，并设置图片大小滑动条的位置
-        self.img_width = self.img_max_width * 0.45
+        self.zoom_width = self.img_max_width * 0.45
         # 图片需要逆时针旋转的角度
         self.rotate_angle = 0
-        self.__dict__["imgSizeScale"].set(self.img_width * 100 / self.img_max_width)
-        self.__dict__["imgSizeInfo"].set(str(self.img_width * 100 // self.img_max_width) + "%")
+        self.imgSizeScale.set(self.zoom_width * 100 / self.img_max_width)
+        self.imgSizeInfo.set(str(self.zoom_width * 100 // self.img_max_width) + "%")
         # 绑定键盘事件
         self.master.bind("<Key>", self.key_event)
+        # 主窗口大小发生变化时，居中图片
+        self.master.bind("<Configure>", self.img_center)
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
@@ -49,21 +97,21 @@ class Window(ttk.Frame):
     # 初始化下拉列表，设置默认值
     def init_default_combobox_item(self):
         # 设置默认的选项
-        set_combobox_item(self.__dict__["cryptoOptionCombobox"], "不需解密", True)
+        set_combobox_item(self.cryptoOptionCombobox, "不需解密", True)
         # 设置单页显示
-        set_combobox_item(self.__dict__["pageOptionCombobox"], "单页", True)
+        set_combobox_item(self.pageOptionCombobox, "单页", True)
         # 设置双页阅读顺序
-        set_combobox_item(self.__dict__["orderOptionCombobox"], "左开", True)
+        set_combobox_item(self.orderOptionCombobox, "左开", True)
 
     # 根据图片路径，将当前文件夹内所有图片保存在图片列表，用于前后翻页显示
     def set_img_list(self):
         img_dir_path = self.current_img_path[:self.current_img_path.rindex("/") + 1]
-        crypto_option = self.__dict__["cryptoOption"].get()
+        crypto_option = self.cryptoOption.get()
         if crypto_option == "解密文件":
             self.img_list = []
             for img_name in os.listdir(img_dir_path):
                 try:
-                    decrypt_img_name = StringCrypto(self.__dict__["password"].get()).decrypt(img_name)
+                    decrypt_img_name = StringCrypto(self.password.get()).decrypt(img_name)
                     if os.path.splitext(decrypt_img_name.lower())[1] in self.img_ext:
                         self.img_list.append(os.path.join(img_dir_path, img_name))
                 except Exception as e:
@@ -75,16 +123,16 @@ class Window(ttk.Frame):
 
     # 设置显示图片信息
     def set_img_info(self):
-        page_option = self.__dict__["pageOption"].get()
+        page_option = self.pageOption.get()
         if not self.img_list or self.current_img_path not in self.img_list:
-            self.__dict__["imgInfoL"].set("")
-            self.__dict__["imgInfoR"].set("")
+            self.imgInfoL.set("")
+            self.imgInfoR.set("")
         elif page_option == "单页":
             img_index = self.img_list.index(self.current_img_path)
             index_str = str(img_index + 1) + "/" + str(len(self.img_list))
             img_name = os.path.basename(self.current_img_path)
-            self.__dict__["imgInfoL"].set(index_str + " | " + img_name)
-            self.__dict__["imgInfoR"].set("")
+            self.imgInfoL.set(index_str + " | " + img_name)
+            self.imgInfoR.set("")
         elif page_option == "双页":
             img_index = self.img_list.index(self.current_img_path)
             index_str = str(img_index + 1) + "/" + str(len(self.img_list))
@@ -93,15 +141,15 @@ class Window(ttk.Frame):
                 img_index_next = img_index + 1
                 index_str_next = str(img_index_next + 1) + "/" + str(len(self.img_list))
                 img_name_next = os.path.basename(self.img_list[img_index_next])
-                order_option = self.__dict__["orderOption"].get()
+                order_option = self.orderOption.get()
                 if order_option == "左开":
-                    self.__dict__["imgInfoL"].set(index_str + " | " + img_name)
-                    self.__dict__["imgInfoR"].set(index_str_next + " | " + img_name_next)
+                    self.imgInfoL.set(index_str + " | " + img_name)
+                    self.imgInfoR.set(index_str_next + " | " + img_name_next)
                 else:
-                    self.__dict__["imgInfoR"].set(index_str + " | " + img_name)
-                    self.__dict__["imgInfoL"].set(index_str_next + " | " + img_name_next)
+                    self.imgInfoR.set(index_str + " | " + img_name)
+                    self.imgInfoL.set(index_str_next + " | " + img_name_next)
             else:
-                self.__dict__["imgInfoL"].set(index_str + " | " + img_name)
+                self.imgInfoL.set(index_str + " | " + img_name)
 
     def key_event(self, event=None):
         # 右方向键下一张图片
@@ -127,14 +175,14 @@ class Window(ttk.Frame):
 
     # 设置密码输入栏中的内容显示或者隐藏
     def password_show_button_callback(self, event=None):
-        if self.__dict__["passwordEntry"]["show"] == "*":
-            self.__dict__["passwordEntry"]["show"] = ""
+        if self.passwordEntry["show"] == "*":
+            self.passwordEntry["show"] = ""
         else:
-            self.__dict__["passwordEntry"]["show"] = "*"
+            self.passwordEntry["show"] = "*"
 
     # 向前翻页显示图片
     def prev_img_button_callback(self, event=None):
-        page_option = self.__dict__["pageOption"].get()
+        page_option = self.pageOption.get()
         self.rotate_angle = 0
         if not self.img_list:
             return
@@ -161,7 +209,7 @@ class Window(ttk.Frame):
 
     # 向后翻页显示图片
     def next_img_button_callback(self, event=None):
-        page_option = self.__dict__["pageOption"].get()
+        page_option = self.pageOption.get()
         self.rotate_angle = 0
         if not self.img_list:
             return
@@ -192,111 +240,66 @@ class Window(ttk.Frame):
         self.rotate_angle %= 360
         self.img_show()
 
+    def img_center(self, event=None):
+        if self.imgCanvas:
+            self.imgCanvas.img_center()
+
     # 拖动图片大小滑动条时，显示图片大小百分比
     def set_img_size_info(self, event=None):
-        self.img_width = int(self.__dict__["imgSizeScale"].get() * self.img_max_width / 100)
-        self.__dict__["imgSizeInfo"].set(str(self.img_width * 100 // self.img_max_width) + "%")
+        self.zoom_width = int(self.imgSizeScale.get() * self.img_max_width / 100)
+        self.imgSizeInfo.set(str(self.zoom_width * 100 // self.img_max_width) + "%")
 
     # 设置当前显示的图片的大小，保持横纵比缩放
-    def set_img_width(self, event=None):
+    def set_img_size(self, event=None):
         self.set_img_size_info()
         self.img_show()
 
-    # 读取图片
-    def default_img_read(self, img_path):
-        # 根据rotate_angle逆时针旋转图片
-        if self.rotate_angle == 0 or self.rotate_angle == 180:
-            img_data = Image.open(img_path).rotate(self.rotate_angle, expand=True)  # 旋转图像, 长宽调整
-            x, y = img_data.size
-            x_s = int(self.img_width)
-            # 调整图片大小时保持横纵比
-            y_s = int(y * x_s // x)
-        elif self.rotate_angle == 90 or self.rotate_angle == 270:
-            img_data = Image.open(img_path).rotate(self.rotate_angle, expand=True)  # 旋转图像, 长宽调整
-            x, y = img_data.size
-            y_s = int(self.img_width)
-            # 调整图片大小时保持横纵比
-            x_s = int(x * y_s // y)
-        else:
-            img_data = Image.open(img_path).rotate(self.rotate_angle)  # 旋转图像, 长宽不变
-            x, y = img_data.size
-            x_s = int(self.img_width)
-            # 调整图片大小时保持横纵比
-            y_s = int(y * x_s // x)
-
-        return img_data.resize((x_s, y_s), Image.ANTIALIAS)
-
     # 静态图片显示
     def default_img_show(self, img_path):
-        out = self.default_img_read(img_path)
-        self.img = ImageTk.PhotoImage(out)
-        self.__dict__["imgLabel"].configure(image=self.img)
+        self.imgCanvas.default_img_show(img_path, self.rotate_angle, self.zoom_width)
 
     # 双页静态图片显示
-    def default_double_img_show(self, img_path, next_img_path):
-        # 双页显示的顺序设定
-        order_option = self.__dict__["orderOption"].get()
-        current_out = self.default_img_read(img_path)
-        next_out = self.default_img_read(next_img_path)
-        current_x, current_y = current_out.size
-        current_x_s = int(self.img_width)
-        current_y_s = int(current_y * current_x_s // current_x)
-        next_x, next_y = next_out.size
-        next_x_s = int(self.img_width)
-        next_y_s = int(next_y * next_x_s // next_x)
-        # 将两张图片合并为一张图片
-        to_image = Image.new('RGBA', (current_x_s + next_x_s, current_y_s if current_y_s > next_y_s else next_y_s))
-        if order_option == "左开":
-            to_image.paste(current_out, (0, 0))
-            to_image.paste(next_out, (current_x_s, 0))
-        elif order_option == "右开":
-            to_image.paste(next_out, (0, 0))
-            to_image.paste(current_out, (next_x_s, 0))
-        self.img = ImageTk.PhotoImage(to_image)
-        self.__dict__["imgLabel"].configure(image=self.img)
+    def default_double_img_show(self, img_path, next_img_path, order_option):
+        self.imgCanvas.default_double_img_show(img_path, next_img_path,
+                                               order_option, self.rotate_angle, self.zoom_width)
+
+    def default_gif_show(self, img_path):
+        self.imgCanvas.default_gif_show(img_path, self.rotate_angle)
 
     # 加密静态图片显示
     def crypto_img_show(self, img_path):
-        img_file_like = io.BytesIO(ByteCrypto(self.__dict__["password"].get()).decrypt(img_path))
-        self.default_img_show(img_file_like)
+        img_file_like = io.BytesIO(ByteCrypto(self.password.get()).decrypt(img_path))
+        self.imgCanvas.default_img_show(img_file_like, self.rotate_angle, self.zoom_width)
 
     # 双页加密静态图片显示
-    def crypto_double_img_show(self, img_path, next_img_path):
-        img_file_like = io.BytesIO(ByteCrypto(self.__dict__["password"].get()).decrypt(img_path))
-        next_img_file_like = io.BytesIO(ByteCrypto(self.__dict__["password"].get()).decrypt(next_img_path))
-        self.default_double_img_show(img_file_like, next_img_file_like)
-
-    # 动态图片显示
-    def default_gif_show(self, img_path):
-        # 建立gif动图处理类
-        self.gif = GifHandle(self.__dict__["imgLabel"], img_path, self.rotate_angle)
-        self.gif.start_gif()
+    def crypto_double_img_show(self, img_path, next_img_path, order_option):
+        img_file_like = io.BytesIO(ByteCrypto(self.password.get()).decrypt(img_path))
+        next_img_file_like = io.BytesIO(ByteCrypto(self.password.get()).decrypt(next_img_path))
+        self.imgCanvas.default_double_img_show(img_file_like, next_img_file_like, order_option,
+                                               self.rotate_angle, self.zoom_width)
 
     # 加密动态图片显示
     def crypto_gif_show(self, img_path):
-        img_file_like = io.BytesIO(ByteCrypto(self.__dict__["password"].get()).decrypt(img_path))
-        self.default_gif_show(img_file_like)
+        img_file_like = io.BytesIO(ByteCrypto(self.password.get()).decrypt(img_path))
+        self.imgCanvas.default_gif_show(img_file_like, self.rotate_angle)
 
-    # 清空图片显示
     def cancel_img(self):
-        # 如果有GIF动图正在运行，则停止这个定时事件
-        if self.gif:
-            self.gif.stop_gif()
-        self.img = None
-        self.gif = None
-        self.__dict__["imgLabel"].config(image='')
+        self.imgCanvas.cancel_img()
+        self.imgCanvas = None
 
     # 根据不同图片类型和解密选项，显示图片
     def img_show(self, event=None):
-        page_option = self.__dict__["pageOption"].get()
-        self.cancel_img()
-        crypto_option = self.__dict__["cryptoOption"].get()
+        page_option = self.pageOption.get()
+        self.imgCanvas.cancel_img()
+        crypto_option = self.cryptoOption.get()
+        # 双页显示的顺序设定
+        order_option = self.orderOption.get()
         # 如果路径不存在直接返回
         if not self.current_img_path or not os.path.exists(self.current_img_path):
             return
         img_name = os.path.basename(self.current_img_path)
         if crypto_option == "解密文件":
-            decrypt_img_name = StringCrypto(self.__dict__["password"].get()).decrypt(img_name)
+            decrypt_img_name = StringCrypto(self.password.get()).decrypt(img_name)
             # 如果图片后缀不支持，则直接返回
             if os.path.splitext(decrypt_img_name.lower())[1] not in self.img_ext:
                 tkmessagebox.showerror("错误", "文件格式不支持")
@@ -314,7 +317,7 @@ class Window(ttk.Frame):
                     self.current_img_path = self.img_list[index - 1]
                 else:
                     next_img_path = self.img_list[index + 1]
-                self.crypto_double_img_show(self.current_img_path, next_img_path)
+                self.crypto_double_img_show(self.current_img_path, next_img_path, order_option)
         elif crypto_option == "不需解密":
             # 如果图片后缀不支持，则直接返回
             if os.path.splitext(img_name.lower())[1] not in self.img_ext:
@@ -333,7 +336,7 @@ class Window(ttk.Frame):
                     self.current_img_path = self.img_list[index - 1]
                 else:
                     next_img_path = self.img_list[index + 1]
-                self.default_double_img_show(self.current_img_path, next_img_path)
+                self.default_double_img_show(self.current_img_path, next_img_path, order_option)
         elif crypto_option == "解密保名":
             # 如果图片后缀不支持，则直接返回
             if os.path.splitext(img_name.lower())[1] not in self.img_ext:
@@ -352,11 +355,11 @@ class Window(ttk.Frame):
                     self.current_img_path = self.img_list[index-1]
                 else:
                     next_img_path = self.img_list[index + 1]
-                self.crypto_double_img_show(self.current_img_path, next_img_path)
+                self.crypto_double_img_show(self.current_img_path, next_img_path, order_option)
 
 
 if __name__ == '__main__':
-    app = Window("ImgLookUI.json")
+    app = Window()
     # 设置窗口标题:
     app.master.title("图片查看器")
     app.master.minsize(600, 600)

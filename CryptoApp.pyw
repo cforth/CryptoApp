@@ -59,7 +59,7 @@ class RootWindow(ttk.Frame):
 
     def img_look(self):
         self.clear_window()
-        self.ChildWindow = ImgLook.Window("ImgLookUI.json", self)
+        self.ChildWindow = ImgLook.Window()
         self.master.bind("<Key>", self.ChildWindow.key_event)
         self.master.title("图片查看器")
         self.master.minsize(600, 600)
