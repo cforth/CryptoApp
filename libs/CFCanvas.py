@@ -139,7 +139,7 @@ class CFCanvas(ttk.Frame):
         self.canvas_width, self.canvas_height = default_width, default_height
         self.img_width, self.img_height = default_width, default_height
 
-        self.canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height,
+        self.canvas = tk.Canvas(self, bg="black", width=self.canvas_width, height=self.canvas_height,
                                 scrollregion=(0, 0, self.img_width, self.img_height))
         self.ysb = tk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
         self.xsb = tk.Scrollbar(self, orient='horizontal', command=self.canvas.xview)
