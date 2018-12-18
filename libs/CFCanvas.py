@@ -22,7 +22,32 @@ def center_window(root, width, height):
     root.geometry(size)
 
 
-# 读取图片，返回PIL.Image对象
+# 读取PIL.Image对象img，调整宽度高度和角度后返回
+def pil_image_data_read(img, rotate_angle, zoom_width):
+    # 根据rotate_angle逆时针旋转图片
+    if rotate_angle == 0 or rotate_angle == 180:
+        img_data = img.rotate(rotate_angle, expand=True)  # 旋转图像, 长宽调整
+        x, y = img_data.size
+        x_s = int(zoom_width)
+        # 调整图片大小时保持横纵比
+        y_s = int(y * x_s // x)
+    elif rotate_angle == 90 or rotate_angle == 270:
+        img_data = img.rotate(rotate_angle, expand=True)  # 旋转图像, 长宽调整
+        x, y = img_data.size
+        y_s = int(zoom_width)
+        # 调整图片大小时保持横纵比
+        x_s = int(x * y_s // y)
+    else:
+        img_data = img.rotate(rotate_angle)  # 旋转图像, 长宽不变
+        x, y = img_data.size
+        x_s = int(zoom_width)
+        # 调整图片大小时保持横纵比
+        y_s = int(y * x_s // x)
+
+    return img_data.resize((x_s, y_s), Image.ANTIALIAS)
+
+
+# 读取图片地址，返回PIL.Image对象
 def pil_image_read(img_path, rotate_angle, zoom_width):
     # 根据rotate_angle逆时针旋转图片
     if rotate_angle == 0 or rotate_angle == 180:
@@ -49,13 +74,15 @@ def pil_image_read(img_path, rotate_angle, zoom_width):
 
 # GIF动图处理类
 class GifHandle(object):
-    def __init__(self, master_widget, img_path, rotate_angle=0):
+    def __init__(self, master_widget, img_path, rotate_angle, zoom_width):
         # 保存显示图片的控件引用
         self.master_widget = master_widget
         # 保存图片路径
         self.img_path = img_path
         # 逆时针旋转的角度
         self.rotate_angle = rotate_angle
+        # 计算图片的缩放
+        self.zoom_width = zoom_width
         # 保存gif格式图片当前显示的帧的数据
         self._frame = None
         # 保存gif格式图片每一帧
@@ -89,14 +116,12 @@ class GifHandle(object):
         except KeyError:
             self.delay = 50
         first = seq[0].convert('RGBA')
-        # 根据角度逆时针旋转图片
-        self._gif_frames = [ImageTk.PhotoImage(first.rotate(self.rotate_angle, expand=True))]
+        self._gif_frames = [first]
         temp = seq[0]
         for image in seq[1:]:
             temp.paste(image)
             frame = temp.convert('RGBA')
-            # 根据角度逆时针旋转图片
-            self._gif_frames.append(ImageTk.PhotoImage(frame.rotate(self.rotate_angle, expand=True)))
+            self._gif_frames.append(frame)
             self._frame_count += 1
 
     # 更新GIF动图的下一帧
@@ -106,7 +131,7 @@ class GifHandle(object):
         if self._ind >= self._frame_count:
             self._ind = 0
         # 将gif当前帧显示在widget容器中
-        self.master_widget.gif_frame_show(self._frame)
+        self.master_widget.gif_show(self._frame, self.rotate_angle, self.zoom_width)
         # 设置定时器，更新widget容器显示的gif帧
         self.master_widget.gif_timer = self.master_widget.after(self.delay, self._update_gif)
 
@@ -153,14 +178,6 @@ class CFCanvas(ttk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-    def default_gif_show(self, img_path, rotate_angle):
-        self.gif_data = GifHandle(self, img_path, rotate_angle)
-        self.gif_data.start_gif()
-
-    def gif_frame_show(self, img_data):
-        self.img_widget = img_data
-        self.img_center()
-
     # 清空图片显示
     def cancel_img(self):
         # 如果有GIF动图正在运行，则停止这个定时事件
@@ -168,6 +185,11 @@ class CFCanvas(ttk.Frame):
             self.gif_data.stop_gif()
         self.gif_data = None
         self.img_data = None
+
+    def gif_show(self, img_data, rotate_angle, zoom_width):
+        self.img_data = pil_image_data_read(img_data, rotate_angle, zoom_width)
+        self.img_width, self.img_height = self.img_data.size
+        self.img_adjust_size(self.img_width, self.img_height)
 
     def img_show(self, img_data):
         self.img_data = img_data
@@ -214,6 +236,11 @@ class CFCanvas(ttk.Frame):
             if self.img_widget:
                 self.canvas_img_id = self.canvas.create_image(self.img_position_x, self.img_position_y,
                                                               anchor=tk.NW, image=self.img_widget)
+
+    # GIF动图显示
+    def default_gif_show(self, img_path, rotate_angle, zoom_width):
+        self.gif_data = GifHandle(self, img_path, rotate_angle, zoom_width)
+        self.gif_data.start_gif()
 
     # 静态图片显示
     def default_img_show(self, img_path, rotate_angle, zoom_width):

@@ -76,7 +76,7 @@ class Window(ttk.Frame):
         self.current_img_path = ""
         # 初始化下拉列表，设置默认值
         self.init_default_combobox_item()
-        # 设置图片最大的宽度(gif图片不能缩放)
+        # 设置图片最大的宽度
         self.img_max_width = 1960
         # 设置默认的图片宽度，并设置图片大小滑动条的位置
         self.zoom_width = self.img_max_width * 0.45
@@ -264,7 +264,7 @@ class Window(ttk.Frame):
                                                order_option, self.rotate_angle, self.zoom_width)
 
     def default_gif_show(self, img_path):
-        self.imgCanvas.default_gif_show(img_path, self.rotate_angle)
+        self.imgCanvas.default_gif_show(img_path, self.rotate_angle, self.zoom_width)
 
     # 加密静态图片显示
     def crypto_img_show(self, img_path):
@@ -281,7 +281,7 @@ class Window(ttk.Frame):
     # 加密动态图片显示
     def crypto_gif_show(self, img_path):
         img_file_like = io.BytesIO(ByteCrypto(self.password.get()).decrypt(img_path))
-        self.imgCanvas.default_gif_show(img_file_like, self.rotate_angle)
+        self.imgCanvas.default_gif_show(img_file_like, self.rotate_angle, self.zoom_width)
 
     def cancel_img(self):
         self.imgCanvas.cancel_img()
