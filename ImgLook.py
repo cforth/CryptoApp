@@ -88,11 +88,29 @@ class Window(ttk.Frame):
         self.master.bind("<Key>", self.key_event)
         # 主窗口大小发生变化时，居中图片
         self.master.bind("<Configure>", self.img_center)
+        # 绑定鼠标滚轴到图片缩放
+        self.master.bind("<MouseWheel>", self.process_wheel)
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
+
+    # 绑定鼠标滚轴到图片缩放
+    def process_wheel(self, event=None):
+        img_size_scale = self.imgSizeScale.get()
+        if event.delta > 0:
+            if img_size_scale * 1.2 <= 100:
+                self.imgSizeScale.set(img_size_scale * 1.2)
+            else:
+                self.imgSizeScale.set(100.0)
+        else:
+            if img_size_scale * 0.8 >= 5:
+                self.imgSizeScale.set(img_size_scale * 0.8)
+            else:
+                self.imgSizeScale.set(5.0)
+        self.set_img_size_info()
+        self.set_img_size()
 
     # 初始化下拉列表，设置默认值
     def init_default_combobox_item(self):
