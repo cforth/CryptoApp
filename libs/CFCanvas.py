@@ -18,7 +18,8 @@ def get_window_current_size(window):
 def center_window(root, width, height):
     screenwidth = root.winfo_screenwidth()
     screenheight = root.winfo_screenheight()
-    size = '%dx%d+%d+%d' % (root.winfo_reqwidth(), root.winfo_reqheight(), (screenwidth-width)/2, (screenheight-height)/2)
+    size = '%dx%d+%d+%d' % (
+    root.winfo_reqwidth(), root.winfo_reqheight(), (screenwidth - width) / 2, (screenheight - height) / 2)
     root.geometry(size)
 
 
@@ -170,13 +171,29 @@ class CFCanvas(ttk.Frame):
         self.xsb = tk.Scrollbar(self, orient='horizontal', command=self.canvas.xview)
         self.canvas['xscrollcommand'] = self.xsb.set
         self.canvas['yscrollcommand'] = self.ysb.set
-
+        # 以下两个值设置拖拽时，画布一次滚动一个像素
+        self.canvas.configure(xscrollincrement=1, yscrollincrement=1)
+        # 绑定鼠标拖拽事件
+        self.canvas.bind("<ButtonPress-1>", self.on_press)
+        self.canvas.bind("<B1-Motion>", self.on_motion)
         self.canvas.grid(row=0, column=0, sticky=tk.N + tk.S + tk.E + tk.W)
         self.ysb.grid(row=0, column=1, sticky=tk.N + tk.S)
         self.xsb.grid(row=1, column=0, sticky=tk.E + tk.W)
         self.grid(row=0, column=0, sticky=tk.N + tk.S + tk.E + tk.W)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
+
+    def on_press(self, event):
+        self.last_x = event.x
+        self.last_y = event.y
+
+    def on_motion(self, event):
+        delta_x = event.x - self.last_x
+        delta_y = event.y - self.last_y
+        self.last_x = event.x
+        self.last_y = event.y
+        self.canvas.xview_scroll(-delta_x, "units")
+        self.canvas.yview_scroll(-delta_y, "units")
 
     # 清空图片显示
     def cancel_img(self):
