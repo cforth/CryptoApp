@@ -186,6 +186,7 @@ class Window(ttk.Frame):
 
     # 重新加载图片
     def refresh_button_callback(self, event=None):
+        self.set_img_list()
         self.img_show()
         self.set_img_info()
 
@@ -315,63 +316,77 @@ class Window(ttk.Frame):
             return
         img_name = os.path.basename(self.current_img_path)
         if crypto_option == "解密文件":
-            decrypt_img_name = StringCrypto(self.password.get()).decrypt(img_name)
-            # 如果图片后缀不支持，则直接返回
-            if os.path.splitext(decrypt_img_name.lower())[1] not in self.img_ext:
-                tkmessagebox.showerror("错误", "文件格式不支持")
-                return
-            if page_option == "单页":
-                if os.path.splitext(decrypt_img_name)[1] == ".gif":
-                    self.crypto_gif_show(self.current_img_path)
-                else:
-                    self.crypto_img_show(self.current_img_path)
-            elif page_option == "双页":
-                index = self.img_list.index(self.current_img_path)
-                # 如果已经到了最后一页，则只显示列表末尾两页
-                if index == len(self.img_list) - 1:
-                    next_img_path = self.current_img_path
-                    self.current_img_path = self.img_list[index - 1]
-                else:
-                    next_img_path = self.img_list[index + 1]
-                self.crypto_double_img_show(self.current_img_path, next_img_path, order_option)
+            try:
+                decrypt_img_name = StringCrypto(self.password.get()).decrypt(img_name)
+                # 如果图片后缀不支持，则直接返回
+                if os.path.splitext(decrypt_img_name.lower())[1] not in self.img_ext:
+                    tkmessagebox.showerror("错误", "文件格式不支持")
+                    return
+                if page_option == "单页":
+                    if os.path.splitext(decrypt_img_name)[1] == ".gif":
+                        self.crypto_gif_show(self.current_img_path)
+                    else:
+                        self.crypto_img_show(self.current_img_path)
+                elif page_option == "双页":
+                    index = self.img_list.index(self.current_img_path)
+                    # 如果已经到了最后一页，则只显示列表末尾两页
+                    if index == len(self.img_list) - 1:
+                        next_img_path = self.current_img_path
+                        self.current_img_path = self.img_list[index - 1]
+                    else:
+                        next_img_path = self.img_list[index + 1]
+                    self.crypto_double_img_show(self.current_img_path, next_img_path, order_option)
+            except ValueError as e:
+                logging.error("Decrypt img error!")
+                tkmessagebox.showerror("错误", "图片解密失败")
+
         elif crypto_option == "不需解密":
-            # 如果图片后缀不支持，则直接返回
-            if os.path.splitext(img_name.lower())[1] not in self.img_ext:
-                tkmessagebox.showerror("错误", "文件格式不支持")
-                return
-            if page_option == "单页":
-                if os.path.splitext(self.current_img_path)[1] == ".gif":
-                    self.default_gif_show(self.current_img_path)
-                else:
-                    self.default_img_show(self.current_img_path)
-            elif page_option == "双页":
-                index = self.img_list.index(self.current_img_path)
-                # 如果已经到了最后一页，则只显示列表末尾两页
-                if index == len(self.img_list) - 1:
-                    next_img_path = self.current_img_path
-                    self.current_img_path = self.img_list[index - 1]
-                else:
-                    next_img_path = self.img_list[index + 1]
-                self.default_double_img_show(self.current_img_path, next_img_path, order_option)
+            try:
+                # 如果图片后缀不支持，则直接返回
+                if os.path.splitext(img_name.lower())[1] not in self.img_ext:
+                    tkmessagebox.showerror("错误", "文件格式不支持")
+                    return
+                if page_option == "单页":
+                    if os.path.splitext(self.current_img_path)[1] == ".gif":
+                        self.default_gif_show(self.current_img_path)
+                    else:
+                        self.default_img_show(self.current_img_path)
+                elif page_option == "双页":
+                    index = self.img_list.index(self.current_img_path)
+                    # 如果已经到了最后一页，则只显示列表末尾两页
+                    if index == len(self.img_list) - 1:
+                        next_img_path = self.current_img_path
+                        self.current_img_path = self.img_list[index - 1]
+                    else:
+                        next_img_path = self.img_list[index + 1]
+                    self.default_double_img_show(self.current_img_path, next_img_path, order_option)
+            except OSError as e:
+                logging.error("Img format error!")
+                tkmessagebox.showerror("错误", "图片格式错误")
+
         elif crypto_option == "解密保名":
-            # 如果图片后缀不支持，则直接返回
-            if os.path.splitext(img_name.lower())[1] not in self.img_ext:
-                tkmessagebox.showerror("错误", "文件格式不支持")
-                return
-            if page_option == "单页":
-                if os.path.splitext(self.current_img_path)[1] == ".gif":
-                    self.crypto_gif_show(self.current_img_path)
-                else:
-                    self.crypto_img_show(self.current_img_path)
-            elif page_option == "双页":
-                index = self.img_list.index(self.current_img_path)
-                # 如果已经到了最后一页，则只显示列表末尾两页
-                if index == len(self.img_list) - 1:
-                    next_img_path = self.current_img_path
-                    self.current_img_path = self.img_list[index - 1]
-                else:
-                    next_img_path = self.img_list[index + 1]
-                self.crypto_double_img_show(self.current_img_path, next_img_path, order_option)
+            try:
+                # 如果图片后缀不支持，则直接返回
+                if os.path.splitext(img_name.lower())[1] not in self.img_ext:
+                    tkmessagebox.showerror("错误", "文件格式不支持")
+                    return
+                if page_option == "单页":
+                    if os.path.splitext(self.current_img_path)[1] == ".gif":
+                        self.crypto_gif_show(self.current_img_path)
+                    else:
+                        self.crypto_img_show(self.current_img_path)
+                elif page_option == "双页":
+                    index = self.img_list.index(self.current_img_path)
+                    # 如果已经到了最后一页，则只显示列表末尾两页
+                    if index == len(self.img_list) - 1:
+                        next_img_path = self.current_img_path
+                        self.current_img_path = self.img_list[index - 1]
+                    else:
+                        next_img_path = self.img_list[index + 1]
+                    self.crypto_double_img_show(self.current_img_path, next_img_path, order_option)
+            except ValueError as e:
+                logging.error("Decrypt img error!")
+                tkmessagebox.showerror("错误", "图片解密失败")
 
 
 if __name__ == '__main__':
