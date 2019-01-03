@@ -14,59 +14,57 @@ logging.basicConfig(level=logging.INFO)
 class Window(ttk.Frame):
     def __init__(self, master=None):
         super().__init__(master, padding=2)
-        self.cryptoOptionCombobox = ttk.Combobox(self, **{'state': ['readonly'], 'values': ['解密文件', '不需解密', '解密保名']},
-                                                 **{'width': 10})
+        self.cryptoOptionCombobox = ttk.Combobox(self, state="readonly", values=["解密文件", "不需解密", "解密保名"], width=10)
         self.cryptoOption = tk.StringVar()
         self.cryptoOptionCombobox['textvariable'] = self.cryptoOption
-        self.cryptoOptionCombobox.grid(sticky=('w', 'e'), **{'row': 0, 'column': 0})
-        self.passwordEntry = tk.Entry(self, **{'show': '*'}, **{'width': 40})
+        self.cryptoOptionCombobox.grid(sticky=('w', 'e'), row=0, column=0)
+        self.passwordEntry = tk.Entry(self, show="*", width=40)
         self.password = tk.StringVar()
         self.passwordEntry['textvariable'] = self.password
-        self.passwordEntry.grid(sticky=('w', 'e'), **{'row': 0, 'column': 1})
-        self.pageOptionCombobox = ttk.Combobox(self, **{'state': ['readonly'], 'values': ['单页', '双页']}, **{'width': 10})
+        self.passwordEntry.grid(sticky=('w', 'e'), row=0, column=1)
+        self.pageOptionCombobox = ttk.Combobox(self, state="readonly", values=["单页", "双页"], width=10)
         self.pageOption = tk.StringVar()
         self.pageOptionCombobox['textvariable'] = self.pageOption
-        self.pageOptionCombobox.grid(sticky=('w', 'e'), **{'row': 0, 'column': 2})
-        self.orderOptionCombobox = ttk.Combobox(self, **{'state': ['readonly'], 'values': ['左开', '右开']},
-                                                **{'width': 10})
+        self.pageOptionCombobox.grid(sticky=('w', 'e'), row=0, column=2)
+        self.orderOptionCombobox = ttk.Combobox(self, state="readonly", values=["左开", "右开"], width=10)
         self.orderOption = tk.StringVar()
         self.orderOptionCombobox['textvariable'] = self.orderOption
-        self.orderOptionCombobox.grid(sticky=('w', 'e'), **{'row': 0, 'column': 3})
-        self.fileFromButton = ttk.Button(self, **{'text': '选择文件'}, **{'width': 10})
-        self.fileFromButton.grid(sticky=('w', 'e'), **{'row': 0, 'column': 4})
+        self.orderOptionCombobox.grid(sticky=('w', 'e'), row=0, column=3)
+        self.fileFromButton = ttk.Button(self, text="选择文件", width=10)
+        self.fileFromButton.grid(sticky=('w', 'e'), row=0, column=4)
         self.fileFromButton['command'] = self.file_from_button_callback
-        self.refreshButton = ttk.Button(self, **{'text': '重新加载'}, **{'width': 10})
-        self.refreshButton.grid(sticky=('w', 'e'), **{'row': 0, 'column': 5})
+        self.refreshButton = ttk.Button(self, text="重新加载", width=10)
+        self.refreshButton.grid(sticky=('w', 'e'), row=0, column=5)
         self.refreshButton['command'] = self.refresh_button_callback
-        self.imgSizeNameLabel = tk.Label(self, **{'text': '调整大小'}, **{'width': 10})
-        self.imgSizeNameLabel.grid(sticky=('e',), **{'row': 1, 'column': 0})
-        self.imgSizeScale = ttk.Scale(self, **{'orient': 'horizontal'}, **{'from_': 1, 'to': 100})
-        self.imgSizeScale.grid(sticky=('w', 'e'), **{'row': 1, 'column': 1})
+        self.imgSizeNameLabel = tk.Label(self, text="调整大小", width=10)
+        self.imgSizeNameLabel.grid(sticky=('e',), row=1, column=0)
+        self.imgSizeScale = ttk.Scale(self, orient="horizontal", from_=1, to=100)
+        self.imgSizeScale.grid(sticky=('w', 'e'), row=1, column=1)
         self.imgSizeScale.bind('<ButtonRelease-1>', self.set_img_size)
         self.imgSizeScale.bind('<B1-Motion>', self.set_img_size_info)
-        self.imgSizeInfoLabel = tk.Label(self, **{}, **{'width': 10})
+        self.imgSizeInfoLabel = tk.Label(self, width=10)
         self.imgSizeInfo = tk.StringVar()
         self.imgSizeInfoLabel['textvariable'] = self.imgSizeInfo
-        self.imgSizeInfoLabel.grid(sticky=('w', 'e'), **{'row': 1, 'column': 2})
-        self.prevImgButton = ttk.Button(self, **{'text': '<'}, **{})
-        self.prevImgButton.grid(sticky=('w', 'n', 's'), **{'row': 1, 'column': 3})
+        self.imgSizeInfoLabel.grid(sticky=('w', 'e'), row=1, column=2)
+        self.prevImgButton = ttk.Button(self, text="<")
+        self.prevImgButton.grid(sticky=('w', 'n', 's'), row=1, column=3)
         self.prevImgButton['command'] = self.prev_img_button_callback
-        self.nextImgButton = ttk.Button(self, **{'text': '>'}, **{})
-        self.nextImgButton.grid(sticky=('w', 'n', 's'), **{'row': 1, 'column': 4})
+        self.nextImgButton = ttk.Button(self, text=">")
+        self.nextImgButton.grid(sticky=('w', 'n', 's'), row=1, column=4)
         self.nextImgButton['command'] = self.next_img_button_callback
-        self.rotateImgButton = ttk.Button(self, **{'text': '旋转'}, **{})
-        self.rotateImgButton.grid(sticky=('w',), **{'row': 1, 'column': 5})
+        self.rotateImgButton = ttk.Button(self, text="旋转")
+        self.rotateImgButton.grid(sticky=('w',), row=1, column=5)
         self.rotateImgButton['command'] = self.rotate_img_button_callback
         self.imgCanvas = CFCanvas(500, 500, self)
-        self.imgCanvas.grid(sticky=('w', 'e', 'n', 's'), **{'row': 2, 'column': 0, 'columnspan': 6})
-        self.imgInfoLLabel = tk.Label(self, **{'text': '图片信息L'}, **{})
+        self.imgCanvas.grid(sticky=('w', 'e', 'n', 's'), row=2, column=0, columnspan=6)
+        self.imgInfoLLabel = tk.Label(self, text="图片信息L")
         self.imgInfoL = tk.StringVar()
         self.imgInfoLLabel['textvariable'] = self.imgInfoL
-        self.imgInfoLLabel.grid(sticky=('w',), **{'row': 3, 'column': 0, 'columnspan': 3})
-        self.imgInfoRLabel = tk.Label(self, **{'text': '图片信息R'}, **{})
+        self.imgInfoLLabel.grid(sticky=('w',), row=3, column=0, columnspan=3)
+        self.imgInfoRLabel = tk.Label(self, text="图片信息R")
         self.imgInfoR = tk.StringVar()
         self.imgInfoRLabel['textvariable'] = self.imgInfoR
-        self.imgInfoRLabel.grid(sticky=('e',), **{'row': 3, 'column': 3, 'columnspan': 3})
+        self.imgInfoRLabel.grid(sticky=('e',), row=3, column=3, columnspan=3)
 
         # 支持的图片格式后缀
         self.img_ext = [".bmp", ".gif", ".jpg", ".png", ".tiff", ".ico", ".jpeg"]
@@ -370,7 +368,7 @@ class Window(ttk.Frame):
                 # 如果已经到了最后一页，则只显示列表末尾两页
                 if index == len(self.img_list) - 1:
                     next_img_path = self.current_img_path
-                    self.current_img_path = self.img_list[index-1]
+                    self.current_img_path = self.img_list[index - 1]
                 else:
                     next_img_path = self.img_list[index + 1]
                 self.crypto_double_img_show(self.current_img_path, next_img_path, order_option)
