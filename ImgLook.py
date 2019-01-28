@@ -137,26 +137,43 @@ class Window(ttk.Frame):
             self.img_list = [os.path.join(img_dir_path, img_name) for img_name in os.listdir(img_dir_path)
                              if os.path.splitext(img_name.lower())[1] in self.img_ext]
 
+    # 解密字符串方法
+    def decrypt_string(self, str):
+        try:
+            decrypt_str = StringCrypto(self.password.get()).decrypt(str)
+        except Exception as e:
+            logging.error("Decrypt img name error!")
+            decrypt_str = ""
+        return decrypt_str
+
     # 设置显示图片信息
     def set_img_info(self):
         page_option = self.pageOption.get()
+        crypto_option = self.cryptoOption.get()
+
+        if crypto_option == "解密文件":
+            img_name = self.decrypt_string(os.path.basename(self.current_img_path))
+        else:
+            img_name = os.path.basename(self.current_img_path)
+
         if not self.img_list or self.current_img_path not in self.img_list:
             self.imgInfoL.set("")
             self.imgInfoR.set("")
         elif page_option == "单页":
             img_index = self.img_list.index(self.current_img_path)
             index_str = str(img_index + 1) + "/" + str(len(self.img_list))
-            img_name = os.path.basename(self.current_img_path)
             self.imgInfoL.set(index_str + " | " + img_name)
             self.imgInfoR.set("")
         elif page_option == "双页":
             img_index = self.img_list.index(self.current_img_path)
             index_str = str(img_index + 1) + "/" + str(len(self.img_list))
-            img_name = os.path.basename(self.current_img_path)
             if img_index < len(self.img_list) - 1:
                 img_index_next = img_index + 1
                 index_str_next = str(img_index_next + 1) + "/" + str(len(self.img_list))
-                img_name_next = os.path.basename(self.img_list[img_index_next])
+                if crypto_option == "解密文件":
+                    img_name_next = self.decrypt_string(os.path.basename(self.img_list[img_index_next]))
+                else:
+                    img_name_next = os.path.basename(self.img_list[img_index_next])
                 order_option = self.orderOption.get()
                 if order_option == "左开":
                     self.imgInfoL.set(index_str + " | " + img_name)
