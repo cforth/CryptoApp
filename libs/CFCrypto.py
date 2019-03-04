@@ -8,6 +8,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Util.Padding import pad, unpad
+import logging
 
 
 # '\0'填充密码
@@ -232,26 +233,29 @@ class DirFileCrypto(object):
         root_dir = os.path.split(real_input_dir)[1]
         # 如果在磁盘根目录下，要把根目录后的‘/’计入长度
         root_dir_index = len(root_parent_dir) if root_parent_dir.endswith('/') else len(root_parent_dir) + 1
-        real_output_subdir = os.path.join(real_output_dir, name_handle_func(root_dir))
+        real_output_subdir = os.path.join(real_output_dir, name_handle_func(root_dir)).replace('\\', '/')
 
         if not os.path.exists(real_output_subdir):
             os.mkdir(real_output_subdir)
 
-        for path, subdir, files in os.walk(input_dir):
+        for path, subdir, files in os.walk(real_input_dir):
 
             # 将当前路径path转为加密后的文件夹路径now_output_path
             now_output_path = DirFileCrypto.dir_path_handle(os.path.abspath(path)[root_dir_index:], name_handle_func)
             for d in subdir:
-                real_output_subdir = os.path.join(real_output_dir, now_output_path, name_handle_func(d))
+                real_output_subdir = os.path.join(real_output_dir, now_output_path, name_handle_func(d)).replace('\\', '/')
                 if not os.path.exists(real_output_subdir):
                     os.mkdir(real_output_subdir)
 
             for f in files:
                 if not self.crypto_status:
                     break
-                input_file_path = os.path.join(os.path.abspath(path), f)
-                output_file_path = os.path.join(real_output_dir, now_output_path, name_handle_func(f))
-                file_handle_func(input_file_path, output_file_path)
+                input_file_path = os.path.join(os.path.abspath(path), f).replace('\\', '/')
+                output_file_path = os.path.join(real_output_dir, now_output_path, name_handle_func(f)).replace('\\', '/')
+                try:
+                    file_handle_func(input_file_path, output_file_path)
+                except Exception as e:
+                    logging.exception(e)
                 self.read_count += 1
 
         self.crypto_status = False
