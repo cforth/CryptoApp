@@ -125,13 +125,20 @@ class Window(ttk.Frame):
         crypto_option = self.cryptoOption.get()
         if crypto_option == "解密文件":
             self.img_list = []
+            # 解密后的图片名称临时列表，用于排序
+            decrypt_img_name_list = []
             for img_name in os.listdir(img_dir_path):
                 try:
                     decrypt_img_name = StringCrypto(self.password.get()).decrypt(img_name)
                     if os.path.splitext(decrypt_img_name.lower())[1] in self.img_ext:
-                        self.img_list.append(os.path.join(img_dir_path, img_name))
+                        decrypt_img_name_list.append(decrypt_img_name)
                 except Exception as e:
                     logging.error("Decrypt img name error!")
+            # 将解密后的图片名称列表排序，再加密后放入img_list中，用于前后翻页顺序显示
+            decrypt_img_name_list.sort()
+            for decrypt_img_name in decrypt_img_name_list:
+                img_name = StringCrypto(self.password.get()).encrypt(decrypt_img_name)
+                self.img_list.append(os.path.join(img_dir_path, img_name))
 
         elif crypto_option == "解密保名" or crypto_option == "不需解密":
             self.img_list = [os.path.join(img_dir_path, img_name) for img_name in os.listdir(img_dir_path)
