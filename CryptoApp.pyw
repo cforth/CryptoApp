@@ -53,7 +53,7 @@ class RootWindow(ttk.Frame):
 
     def text_look(self):
         self.clear_window()
-        self.ChildWindow = TextLook.Window("TextLookUI.json", self)
+        self.ChildWindow = TextLook.Window(self)
         self.master.title("文本查看器")
         self.master.minsize(600, 30)
 
