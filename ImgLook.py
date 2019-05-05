@@ -62,11 +62,14 @@ class Window(ttk.Frame):
         self.imgInfoLabel['textvariable'] = self.imgInfo
         self.imgInfoLabel.grid(sticky=('w',), row=3, column=0, columnspan=2)
         self.jumpPageNumberLabel = tk.Label(self, text="跳转页码:")
-        self.jumpPageNumberLabel.grid(sticky=('e',), row=3, column=4)
+        self.jumpPageNumberLabel.grid(sticky=('e',), row=3, column=3)
         self.jumpPageNumberEntry = tk.Entry(self, width=10)
         self.jumpPageNumber = tk.StringVar()
         self.jumpPageNumberEntry['textvariable'] = self.jumpPageNumber
-        self.jumpPageNumberEntry.grid(sticky=('w',), row=3, column=5)
+        self.jumpPageNumberEntry.grid(sticky=('w', 'e'), row=3, column=4)
+        self.jumpPageNumberButton = ttk.Button(self, text="GO", width=10)
+        self.jumpPageNumberButton.grid(sticky=('w', 'e'), row=3, column=5)
+        self.jumpPageNumberButton['command'] = self.jump_page_callback
 
         # 支持的图片格式后缀
         self.img_ext = [".bmp", ".gif", ".jpg", ".png", ".tiff", ".ico", ".jpeg"]
@@ -195,9 +198,9 @@ class Window(ttk.Frame):
                     img_name_next = os.path.basename(self.img_list[img_index_next])
                 order_option = self.orderOption.get()
                 if order_option == "左开":
-                    self.imgInfo.set(index_str + "," + index_str_next + " : " + img_name + " | " + img_name_next)
+                    self.imgInfo.set(index_str + ", " + index_str_next + " : " + img_name + " | " + img_name_next)
                 else:
-                    self.imgInfo.set(index_str_next + "," + index_str + " : " + img_name_next + " | " + img_name)
+                    self.imgInfo.set(index_str_next + ", " + index_str + " : " + img_name_next + " | " + img_name)
             else:
                 self.imgInfo.set(index_str + " : " + img_name)
 
