@@ -36,35 +36,31 @@ class Window(ttk.Frame):
         self.refreshButton = ttk.Button(self, text="重新加载", width=10)
         self.refreshButton.grid(sticky=('w', 'e'), row=0, column=5)
         self.refreshButton['command'] = self.refresh_button_callback
+        self.imgCanvas = CFCanvas(500, 500, self)
+        self.imgCanvas.grid(sticky=('w', 'e', 'n', 's'), row=1, column=0, columnspan=6)
         self.imgSizeNameLabel = tk.Label(self, text="调整大小", width=10)
-        self.imgSizeNameLabel.grid(sticky=('e',), row=1, column=0)
+        self.imgSizeNameLabel.grid(sticky=('e',), row=2, column=0)
         self.imgSizeScale = ttk.Scale(self, orient="horizontal", from_=1, to=100)
-        self.imgSizeScale.grid(sticky=('w', 'e'), row=1, column=1)
+        self.imgSizeScale.grid(sticky=('w', 'e'), row=2, column=1)
         self.imgSizeScale.bind('<ButtonRelease-1>', self.set_img_size)
         self.imgSizeScale.bind('<B1-Motion>', self.set_img_size_info)
         self.imgSizeInfoLabel = tk.Label(self, width=10)
         self.imgSizeInfo = tk.StringVar()
         self.imgSizeInfoLabel['textvariable'] = self.imgSizeInfo
-        self.imgSizeInfoLabel.grid(sticky=('w', 'e'), row=1, column=2)
+        self.imgSizeInfoLabel.grid(sticky=('w', 'e'), row=2, column=2)
         self.prevImgButton = ttk.Button(self, text="<")
-        self.prevImgButton.grid(sticky=('w', 'n', 's'), row=1, column=3)
+        self.prevImgButton.grid(sticky=('w', 'n', 's'), row=2, column=3)
         self.prevImgButton['command'] = self.prev_img_button_callback
         self.nextImgButton = ttk.Button(self, text=">")
-        self.nextImgButton.grid(sticky=('w', 'n', 's'), row=1, column=4)
+        self.nextImgButton.grid(sticky=('w', 'n', 's'), row=2, column=4)
         self.nextImgButton['command'] = self.next_img_button_callback
         self.rotateImgButton = ttk.Button(self, text="旋转")
-        self.rotateImgButton.grid(sticky=('w',), row=1, column=5)
+        self.rotateImgButton.grid(sticky=('w',), row=2, column=5)
         self.rotateImgButton['command'] = self.rotate_img_button_callback
-        self.imgCanvas = CFCanvas(500, 500, self)
-        self.imgCanvas.grid(sticky=('w', 'e', 'n', 's'), row=2, column=0, columnspan=6)
-        self.imgInfoLLabel = tk.Label(self, text="图片信息L")
-        self.imgInfoL = tk.StringVar()
-        self.imgInfoLLabel['textvariable'] = self.imgInfoL
-        self.imgInfoLLabel.grid(sticky=('w',), row=3, column=0, columnspan=2)
-        self.imgInfoRLabel = tk.Label(self, text="图片信息R")
-        self.imgInfoR = tk.StringVar()
-        self.imgInfoRLabel['textvariable'] = self.imgInfoR
-        self.imgInfoRLabel.grid(sticky=('e',), row=3, column=2, columnspan=2)
+        self.imgInfoLabel = tk.Label(self, text="图片信息")
+        self.imgInfo = tk.StringVar()
+        self.imgInfoLabel['textvariable'] = self.imgInfo
+        self.imgInfoLabel.grid(sticky=('w',), row=3, column=0, columnspan=2)
         self.jumpPageNumberLabel = tk.Label(self, text="跳转页码:")
         self.jumpPageNumberLabel.grid(sticky=('e',), row=3, column=4)
         self.jumpPageNumberEntry = tk.Entry(self, width=10)
@@ -99,7 +95,7 @@ class Window(ttk.Frame):
         self.master.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(1, weight=1)
-        self.rowconfigure(2, weight=1)
+        self.rowconfigure(1, weight=1)
 
     # 跳转到指定页码
     def jump_page_callback(self, event=None):
@@ -182,13 +178,11 @@ class Window(ttk.Frame):
             img_name = os.path.basename(self.current_img_path)
 
         if not self.img_list or self.current_img_path not in self.img_list:
-            self.imgInfoL.set("")
-            self.imgInfoR.set("")
+            self.imgInfo.set("")
         elif page_option == "单页":
             img_index = self.img_list.index(self.current_img_path)
             index_str = str(img_index + 1) + "/" + str(len(self.img_list))
-            self.imgInfoL.set(index_str + " | " + img_name)
-            self.imgInfoR.set("")
+            self.imgInfo.set(index_str + " : " + img_name)
         elif page_option == "双页":
             img_index = self.img_list.index(self.current_img_path)
             index_str = str(img_index + 1) + "/" + str(len(self.img_list))
@@ -201,13 +195,11 @@ class Window(ttk.Frame):
                     img_name_next = os.path.basename(self.img_list[img_index_next])
                 order_option = self.orderOption.get()
                 if order_option == "左开":
-                    self.imgInfoL.set(index_str + " | " + img_name)
-                    self.imgInfoR.set(index_str_next + " | " + img_name_next)
+                    self.imgInfo.set(index_str + "," + index_str_next + " : " + img_name + " | " + img_name_next)
                 else:
-                    self.imgInfoR.set(index_str + " | " + img_name)
-                    self.imgInfoL.set(index_str_next + " | " + img_name_next)
+                    self.imgInfo.set(index_str_next + "," + index_str + " : " + img_name_next + " | " + img_name)
             else:
-                self.imgInfoL.set(index_str + " | " + img_name)
+                self.imgInfo.set(index_str + " : " + img_name)
 
     def key_event(self, event=None):
         # 右方向键下一张图片
