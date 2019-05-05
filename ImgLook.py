@@ -60,11 +60,17 @@ class Window(ttk.Frame):
         self.imgInfoLLabel = tk.Label(self, text="图片信息L")
         self.imgInfoL = tk.StringVar()
         self.imgInfoLLabel['textvariable'] = self.imgInfoL
-        self.imgInfoLLabel.grid(sticky=('w',), row=3, column=0, columnspan=3)
+        self.imgInfoLLabel.grid(sticky=('w',), row=3, column=0, columnspan=2)
         self.imgInfoRLabel = tk.Label(self, text="图片信息R")
         self.imgInfoR = tk.StringVar()
         self.imgInfoRLabel['textvariable'] = self.imgInfoR
-        self.imgInfoRLabel.grid(sticky=('e',), row=3, column=3, columnspan=3)
+        self.imgInfoRLabel.grid(sticky=('e',), row=3, column=2, columnspan=2)
+        self.jumpPageNumberLabel = tk.Label(self, text="跳转页码:")
+        self.jumpPageNumberLabel.grid(sticky=('e',), row=3, column=4)
+        self.jumpPageNumberEntry = tk.Entry(self, width=10)
+        self.jumpPageNumber = tk.StringVar()
+        self.jumpPageNumberEntry['textvariable'] = self.jumpPageNumber
+        self.jumpPageNumberEntry.grid(sticky=('w',), row=3, column=5)
 
         # 支持的图片格式后缀
         self.img_ext = [".bmp", ".gif", ".jpg", ".png", ".tiff", ".ico", ".jpeg"]
@@ -84,6 +90,7 @@ class Window(ttk.Frame):
         self.imgSizeInfo.set(str(self.zoom_width * 100 // self.img_max_width) + "%")
         # 绑定键盘事件
         self.master.bind("<Key>", self.key_event)
+        self.jumpPageNumberEntry.bind("<Return>", self.jump_page_callback)
         # 主窗口大小发生变化时，居中图片
         self.master.bind("<Configure>", self.img_center)
         # 绑定鼠标滚轴到图片缩放
@@ -93,6 +100,17 @@ class Window(ttk.Frame):
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
+
+    # 跳转到指定页码
+    def jump_page_callback(self, event=None):
+        try:
+            page_number = int(self.jumpPageNumber.get())
+            if 0 < page_number <= len(self.img_list):
+                self.current_img_path = self.img_list[page_number-1]
+                self.img_show()
+                self.set_img_info()
+        except Exception as e:
+            logging.error("Jump page number error!")
 
     # 绑定鼠标滚轴到图片缩放
     def process_wheel(self, event=None):
