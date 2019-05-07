@@ -86,7 +86,7 @@ class RootWindow(ttk.Frame):
         self.clear_window()
         self.ChildWindow = Cryptor.Window(self)
         self.master.title("加密解密器")
-        self.master.minsize(600, 600)
+        self.master.minsize(400, 500)
 
     def help_about(self):
         messagebox.showinfo('关于', 'Crypto工具箱\n'
