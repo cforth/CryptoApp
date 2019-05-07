@@ -9,7 +9,6 @@ import subprocess
 from threading import Thread
 from libs.Util import *
 from libs.CFCrypto import *
-from libs.CFText import CFText
 
 logging.basicConfig(level=logging.INFO)
 
@@ -54,8 +53,6 @@ class Window(ttk.Frame):
         self.progressBar = ttk.Progressbar(self, orient='horizontal', mode='determinate', value=0)
         self.progressBar['variable'] = self.process_var
         self.progressLabel = ttk.Label(self, textvariable=self.process_label_var)
-        # 日志输出
-        self.notesText = CFText(self,title="记录窗口")
         # 文件浏览器
         self.tree = ttk.Treeview(self, height=20)
         self.ysb = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
@@ -92,12 +89,11 @@ class Window(ttk.Frame):
         self.progressBar.grid(row=4, column=0, columnspan=3, **pad_w_e)
         self.stop_button.grid(row=4, column=3, **pad_w_e)
         self.progressLabel.grid(row=5, column=0, columnspan=4, **pad_w_e)
-        self.notesText.grid(row=6, column=0, columnspan=4, sticky=(tk.N, tk.S, tk.E, tk.W))
-        self.tree.grid(row=0, column=4, rowspan=7, sticky=(tk.N, tk.S, tk.E, tk.W))
-        self.ysb.grid(row=0, column=5, rowspan=7, sticky=(tk.N, tk.S))
-        self.xsb.grid(row=7, column=4, **pad_w_e)
+        self.tree.grid(row=6, column=0, columnspan=4, sticky=(tk.N, tk.S, tk.E, tk.W))
+        self.ysb.grid(row=6, column=4, sticky=(tk.N, tk.S))
+        self.xsb.grid(row=7, column=0, columnspan=5, **pad_w_e)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
-        self.columnconfigure(4, weight=1)
+        self.columnconfigure(2, weight=1)
         self.rowconfigure(6, weight=1)
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
@@ -512,6 +508,6 @@ if __name__ == '__main__':
     app = Window()
     # 设置窗口标题:
     app.master.title("CF加密解密器")
-    app.master.minsize(600, 600)
+    app.master.minsize(400, 500)
     # 主消息循环:
     app.mainloop()
