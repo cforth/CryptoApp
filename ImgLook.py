@@ -221,6 +221,21 @@ class Window(ttk.Frame):
             self.img_show()
             self.set_img_info()
 
+    # 传入图片地址，解密选项和密码来打开图片
+    def open_img(self, img_path, password="", crypto_option="不需解密", page_option="单页", order_option="左开"):
+        if img_path and os.path.isfile(img_path):
+            self.current_img_path = os.path.abspath(img_path).replace("\\", "/")
+            self.password.set(str(password))
+            if page_option in ["单页", "双页"]:
+                self.pageOption.set(page_option)
+            if order_option in ["左开", "右开"]:
+                self.orderOption.set(order_option)
+            if crypto_option in ["解密文件", "不需解密", "解密保名"]:
+                self.cryptoOption.set(crypto_option)
+            self.set_img_list()
+            self.img_show()
+            self.set_img_info()
+
     # 重新加载图片
     def refresh_button_callback(self, event=None):
         self.set_img_list()
