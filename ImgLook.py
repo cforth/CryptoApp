@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 
 # 窗口类
 class Window(ttk.Frame):
-    def __init__(self, master=None):
+    def __init__(self, master=None, **kwargs):
         super().__init__(master, padding=2)
         self.cryptoOptionCombobox = ttk.Combobox(self, state="readonly", values=["解密文件", "不需解密", "解密保名"], width=10)
         self.cryptoOption = tk.StringVar()
@@ -99,6 +99,11 @@ class Window(ttk.Frame):
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(1, weight=1)
         self.rowconfigure(1, weight=1)
+
+        # 保存传入的初始参数，如果传入参数则直接打开图片
+        self.kwargs = dict(**kwargs)
+        if self.kwargs:
+            self.open_img(**self.kwargs)
 
     # 跳转到指定页码
     def jump_page_callback(self, event=None):
@@ -222,7 +227,7 @@ class Window(ttk.Frame):
             self.set_img_info()
 
     # 传入图片地址，解密选项和密码来打开图片
-    def open_img(self, img_path, password="", crypto_option="不需解密", page_option="单页", order_option="左开"):
+    def open_img(self, img_path="", password="", crypto_option="不需解密", page_option="单页", order_option="左开"):
         if img_path and os.path.isfile(img_path):
             self.current_img_path = os.path.abspath(img_path).replace("\\", "/")
             self.password.set(str(password))
@@ -439,6 +444,15 @@ class Window(ttk.Frame):
             except ValueError as e:
                 logging.error("Decrypt img error!")
                 tkmessagebox.showerror("错误", "图片解密失败")
+
+
+# 通过外部参数直接打开图片窗口
+def main_window(img_path="", password="", crypto_option="不需解密", page_option="单页", order_option="左开"):
+    app = Window(master=None, img_path=img_path, password=password,
+                 crypto_option=crypto_option, page_option=page_option, order_option=order_option)
+    app.master.title("图片查看器")
+    app.master.minsize(600, 600)
+    app.mainloop()
 
 
 if __name__ == '__main__':

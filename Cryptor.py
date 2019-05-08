@@ -7,8 +7,10 @@ import threading
 import time
 import subprocess
 from threading import Thread
+from multiprocessing import Process
 from libs.Util import *
 from libs.CFCrypto import *
+import ImgLook
 
 logging.basicConfig(level=logging.INFO)
 
@@ -63,6 +65,8 @@ class Window(ttk.Frame):
         # 文件浏览器区右键菜单
         self.tree_menu = tk.Menu(self, tearoff=0)
         self.tree_menu.add_command(label="复制地址", command=self.on_copy_file_path)
+        self.tree_menu.add_separator()
+        self.tree_menu.add_command(label="打开图片", command=self.on_open_img)
         self.tree_menu.add_separator()
         self.tree_menu.add_command(label="打开文件夹", command=self.on_open_dir_path)
         # 输入框右键菜单
@@ -142,6 +146,23 @@ class Window(ttk.Frame):
         file_select_path = item_values[0] if item_values else ""
         self.clipboard_clear()
         self.clipboard_append(file_select_path)
+
+    # 打开图片文件
+    def on_open_img(self):
+        if self.tree.selection():
+            item_values = self.tree.item(self.tree.selection()[0])['values']
+            file_select_path = item_values[0] if item_values else ""
+            if self.cryptOption.get() in ["加密", "加密预览"]:
+                p = Process(target=ImgLook.main_window, args=(file_select_path,))
+                p.start()
+            elif self.cryptOption.get() in ["解密", "解密预览"]:
+                password = self.passwordEntry.get()
+                if self.nameCryptoOptionCombobox.get() == "修改文件名":
+                    p = Process(target=ImgLook.main_window, args=(file_select_path, password, "解密文件"))
+                    p.start()
+                elif self.nameCryptoOptionCombobox.get() == "保持文件名":
+                    p = Process(target=ImgLook.main_window, args=(file_select_path, password, "解密保名"))
+                    p.start()
 
     # 打开文件所在的文件夹
     def on_open_dir_path(self):
