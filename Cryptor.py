@@ -13,7 +13,7 @@ from libs.CFCrypto import *
 import ImgLook
 import TextLook
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.ERROR)
 
 
 class Window(ttk.Frame):
@@ -159,14 +159,9 @@ class Window(ttk.Frame):
                 p = Process(target=TextLook.main_window, args=(file_select_path,))
                 p.start()
             elif self.cryptOption.get() in ["解密", "解密预览"]:
-                # 当前只支持通过Cryptor加密后的字符串保存在文本文件中，进行解密
-                # 解密文本的逻辑上有点问题，暂时不支持通过Cryptor直接加密后的文本文件
                 password = self.passwordEntry.get()
-                if self.nameCryptoOptionCombobox.get() == "修改文件名":
-                    pass
-                elif self.nameCryptoOptionCombobox.get() == "保持文件名":
-                    p = Process(target=TextLook.main_window, args=(file_select_path, password, "输入密码"))
-                    p.start()
+                p = Process(target=TextLook.main_window, args=(file_select_path, password, "加密文件"))
+                p.start()
 
     # 打开图片文件
     def on_open_img(self):

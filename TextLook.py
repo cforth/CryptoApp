@@ -1,9 +1,11 @@
 import os
 import logging
+import io
+import chardet
 import tkinter.filedialog as filedialog
 import tkinter.messagebox as tkmessagebox
 from libs.json2gui import *
-from libs.CFCrypto import StringCrypto
+from libs.CFCrypto import StringCrypto, ByteCrypto, BinaryDataCrypto
 from libs.Util import TextSection
 
 logging.basicConfig(level=logging.ERROR)
@@ -15,7 +17,7 @@ class Window(ttk.Frame):
     def __init__(self, master=None, **kwargs):
         super().__init__(master, padding=2)
         # 初始化UI
-        self.cryptoOptionCombobox = ttk.Combobox(self, state=['readonly'], values=['输入密码', '没有密码'], width=10)
+        self.cryptoOptionCombobox = ttk.Combobox(self, state=['readonly'], values=['输入密码', '没有密码', '加密文件'], width=10)
         self.cryptoOption = tk.StringVar()
         self.cryptoOptionCombobox['textvariable'] = self.cryptoOption
         self.cryptoOptionCombobox.grid(sticky=('w', 'e'), row=0, column=0)
@@ -73,6 +75,8 @@ class Window(ttk.Frame):
         self.text_size = TEXT_DEFAULT_SIZE
         self.current_file_path = None
         self.file_text = None
+        # 保存文件的默认编码
+        self.str_ecoding = "utf-8"
         # 设置文本区右键菜单
         self.menu = tk.Menu(self, tearoff=0)
         self.set_text_section()
@@ -94,7 +98,7 @@ class Window(ttk.Frame):
             self.current_file_path = os.path.abspath(txt_path)
             if password:
                 self.password.set(password)
-            if crypto_option in ['输入密码', '没有密码']:
+            if crypto_option in ['输入密码', '没有密码', '加密文件']:
                 self.cryptoOption.set(crypto_option)
             self.file_show()
 
@@ -142,35 +146,49 @@ class Window(ttk.Frame):
         self.file_save(new_file_path)
 
     def file_show(self):
-        if not os.path.isfile(self.current_file_path) or not self.current_file_path.endswith('.txt'):
-            logging.error("Text Format Error！！！")
-            tkmessagebox.showerror("错误", "文本格式错误！")
+        if not os.path.isfile(self.current_file_path):
+            logging.error("Text Path Error！！！")
+            tkmessagebox.showerror("错误", "文件路径错误！")
             return
 
         self.filePath.set(self.current_file_path)
         crypto_option = self.cryptoOption.get()
         self.fileShowText.delete(0.0, 'end')
-        with open(self.current_file_path, "r") as f:
-            self.file_text = f.read()
-            self.fileSaveStatus.set("")
-            if crypto_option == "输入密码":
-                password = self.password.get()
-                try:
-                    self.file_text = StringCrypto(password).decrypt(self.file_text)
-                    self.fileCryptoStatus.set("[已加密]")
-                except Exception as e:
-                    self.file_text = ""
-                    self.filePath.set("")
-                    self.fileCryptoStatus.set("")
-                    self.fileSaveStatus.set("")
-                    logging.error("Text Decrypt Error！！！")
-                    tkmessagebox.showerror("错误", "文本格式或密码错误！")
-            else:
+        self.fileSaveStatus.set("")
+        if crypto_option == "加密文件":
+            try:
+                file_str = ByteCrypto(self.password.get()).decrypt(self.current_file_path)
+                self.str_ecoding = chardet.detect(file_str)['encoding']
+                self.file_text = file_str.decode(self.str_ecoding)
+                self.fileCryptoStatus.set("[已文件加密]")
+            except Exception as e:
+                self.file_text = ""
+                self.filePath.set("")
                 self.fileCryptoStatus.set("")
+                self.fileSaveStatus.set("")
+                logging.error("Text Decrypt Error！！！")
+                tkmessagebox.showerror("错误", "文本格式或密码错误！")
+        else:
+            with open(self.current_file_path, "r") as f:
+                self.file_text = f.read()
+                if crypto_option == "输入密码":
+                    password = self.password.get()
+                    try:
+                        self.file_text = StringCrypto(password).decrypt(self.file_text)
+                        self.fileCryptoStatus.set("[已加密]")
+                    except Exception as e:
+                        self.file_text = ""
+                        self.filePath.set("")
+                        self.fileCryptoStatus.set("")
+                        self.fileSaveStatus.set("")
+                        logging.error("Text Decrypt Error！！！")
+                        tkmessagebox.showerror("错误", "文本格式或密码错误！")
+                elif crypto_option == "没有密码":
+                    self.fileCryptoStatus.set("")
 
-            self.set_text_size()
-            self.set_text_wrap()
-            self.fileShowText.insert('end', self.file_text)
+        self.set_text_size()
+        self.set_text_wrap()
+        self.fileShowText.insert('end', self.file_text)
 
     def file_save(self, file_path):
         if not file_path or os.path.isdir(file_path):
@@ -178,16 +196,22 @@ class Window(ttk.Frame):
             return
         crypto_option = self.cryptoOption.get()
         save_text = self.fileShowText.get(0.0, 'end')
+        password = self.password.get()
 
         if crypto_option == "输入密码":
-            password = self.password.get()
             save_text = StringCrypto(password).encrypt(save_text)
             self.fileCryptoStatus.set("[已加密]")
-        else:
+            with open(file_path, "w") as f:
+                f.write(save_text)
+        elif crypto_option == "没有密码":
             self.fileCryptoStatus.set("")
-
-        with open(file_path, "w") as f:
-            f.write(save_text)
+            with open(file_path, "w") as f:
+                f.write(save_text)
+        elif crypto_option == "加密文件":
+            save_data = BinaryDataCrypto(self.password.get()).encrypt(save_text.encode(self.str_ecoding))
+            with open(file_path, "wb") as f:
+                f.write(save_data)
+            self.fileCryptoStatus.set("[已文件加密]")
 
         self.fileSaveStatus.set("[已保存]")
         self.current_file_path = file_path
