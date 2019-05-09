@@ -11,6 +11,7 @@ from multiprocessing import Process
 from libs.Util import *
 from libs.CFCrypto import *
 import ImgLook
+import TextLook
 
 logging.basicConfig(level=logging.INFO)
 
@@ -65,6 +66,8 @@ class Window(ttk.Frame):
         # 文件浏览器区右键菜单
         self.tree_menu = tk.Menu(self, tearoff=0)
         self.tree_menu.add_command(label="复制地址", command=self.on_copy_file_path)
+        self.tree_menu.add_separator()
+        self.tree_menu.add_command(label="打开文本", command=self.on_open_txt)
         self.tree_menu.add_separator()
         self.tree_menu.add_command(label="打开图片", command=self.on_open_img)
         self.tree_menu.add_separator()
@@ -146,6 +149,24 @@ class Window(ttk.Frame):
         file_select_path = item_values[0] if item_values else ""
         self.clipboard_clear()
         self.clipboard_append(file_select_path)
+
+    # 打开文本文件
+    def on_open_txt(self):
+        if self.tree.selection():
+            item_values = self.tree.item(self.tree.selection()[0])['values']
+            file_select_path = item_values[0] if item_values else ""
+            if self.cryptOption.get() in ["加密", "加密预览"]:
+                p = Process(target=TextLook.main_window, args=(file_select_path,))
+                p.start()
+            elif self.cryptOption.get() in ["解密", "解密预览"]:
+                # 当前只支持通过Cryptor加密后的字符串保存在文本文件中，进行解密
+                # 解密文本的逻辑上有点问题，暂时不支持通过Cryptor直接加密后的文本文件
+                password = self.passwordEntry.get()
+                if self.nameCryptoOptionCombobox.get() == "修改文件名":
+                    pass
+                elif self.nameCryptoOptionCombobox.get() == "保持文件名":
+                    p = Process(target=TextLook.main_window, args=(file_select_path, password, "输入密码"))
+                    p.start()
 
     # 打开图片文件
     def on_open_img(self):

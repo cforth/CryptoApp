@@ -12,7 +12,7 @@ TEXT_DEFAULT_SIZE = 12
 
 # 窗口类
 class Window(ttk.Frame):
-    def __init__(self, master=None):
+    def __init__(self, master=None, **kwargs):
         super().__init__(master, padding=2)
         # 初始化UI
         self.cryptoOptionCombobox = ttk.Combobox(self, state=['readonly'], values=['输入密码', '没有密码'], width=10)
@@ -82,6 +82,21 @@ class Window(ttk.Frame):
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
         self.columnconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
+
+        # 保存传入的初始参数，如果传入参数则直接打开文本
+        self.kwargs = dict(**kwargs)
+        if self.kwargs:
+            self.open_txt(**self.kwargs)
+
+    # 打开文本
+    def open_txt(self, txt_path="", password="", crypto_option="没有密码"):
+        if txt_path and os.path.isfile(txt_path):
+            self.current_file_path = os.path.abspath(txt_path)
+            if password:
+                self.password.set(password)
+            if crypto_option in ['输入密码', '没有密码']:
+                self.cryptoOption.set(crypto_option)
+            self.file_show()
 
     # 弹出菜单
     def popupmenu(self, event):
@@ -181,6 +196,16 @@ class Window(ttk.Frame):
 
     def clear_save_status(self):
         self.fileSaveStatus.set("")
+
+
+# 通过外部参数直接打开文本窗口
+def main_window(txt_path="", password="", crypto_option="没有密码"):
+    app = Window(master=None, txt_path=txt_path, password=password, crypto_option=crypto_option)
+    # 设置窗口标题:
+    app.master.title("文本查看器")
+    app.master.minsize(600, 30)
+    # 主消息循环:
+    app.mainloop()
 
 
 if __name__ == '__main__':
