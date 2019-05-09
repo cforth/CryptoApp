@@ -160,7 +160,7 @@ class Window(ttk.Frame):
                 p.start()
             elif self.cryptOption.get() in ["解密", "解密预览"]:
                 password = self.passwordEntry.get()
-                p = Process(target=TextLook.main_window, args=(file_select_path, password, "加密文件"))
+                p = Process(target=TextLook.main_window, args=(file_select_path, password, "解密文件"))
                 p.start()
 
     # 打开图片文件

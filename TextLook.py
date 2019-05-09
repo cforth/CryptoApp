@@ -17,7 +17,7 @@ class Window(ttk.Frame):
     def __init__(self, master=None, **kwargs):
         super().__init__(master, padding=2)
         # 初始化UI
-        self.cryptoOptionCombobox = ttk.Combobox(self, state=['readonly'], values=['输入密码', '没有密码', '加密文件'], width=10)
+        self.cryptoOptionCombobox = ttk.Combobox(self, state=['readonly'], values=['解密文本', '普通文本', '解密文件'], width=10)
         self.cryptoOption = tk.StringVar()
         self.cryptoOptionCombobox['textvariable'] = self.cryptoOption
         self.cryptoOptionCombobox.grid(sticky=('w', 'e'), row=0, column=0)
@@ -67,7 +67,7 @@ class Window(ttk.Frame):
         # 设置滚动条
         set_scrollbar(self.fileShowText, self.TextScrollbarX, self.TextScrollbarY)
         # 设置下拉列表默认值
-        set_combobox_item(self.cryptoOptionCombobox, "没有密码", True)
+        set_combobox_item(self.cryptoOptionCombobox, "普通文本", True)
         set_combobox_item(self.textSizeOptionCombobox, "100%", True)
         self.textSizeOptionCombobox.bind("<<ComboboxSelected>>", self.set_text_size)
         set_combobox_item(self.textWrapOptionCombobox, "换行", True)
@@ -93,12 +93,12 @@ class Window(ttk.Frame):
             self.open_txt(**self.kwargs)
 
     # 打开文本
-    def open_txt(self, txt_path="", password="", crypto_option="没有密码"):
+    def open_txt(self, txt_path="", password="", crypto_option="普通文本"):
         if txt_path and os.path.isfile(txt_path):
             self.current_file_path = os.path.abspath(txt_path)
             if password:
                 self.password.set(password)
-            if crypto_option in ['输入密码', '没有密码', '加密文件']:
+            if crypto_option in ['解密文本', '普通文本', '解密文件']:
                 self.cryptoOption.set(crypto_option)
             self.file_show()
 
@@ -155,7 +155,7 @@ class Window(ttk.Frame):
         crypto_option = self.cryptoOption.get()
         self.fileShowText.delete(0.0, 'end')
         self.fileSaveStatus.set("")
-        if crypto_option == "加密文件":
+        if crypto_option == "解密文件":
             try:
                 file_str = ByteCrypto(self.password.get()).decrypt(self.current_file_path)
                 self.str_ecoding = chardet.detect(file_str)['encoding']
@@ -171,7 +171,7 @@ class Window(ttk.Frame):
         else:
             with open(self.current_file_path, "r") as f:
                 self.file_text = f.read()
-                if crypto_option == "输入密码":
+                if crypto_option == "解密文本":
                     password = self.password.get()
                     try:
                         self.file_text = StringCrypto(password).decrypt(self.file_text)
@@ -183,7 +183,7 @@ class Window(ttk.Frame):
                         self.fileSaveStatus.set("")
                         logging.error("Text Decrypt Error！！！")
                         tkmessagebox.showerror("错误", "文本格式或密码错误！")
-                elif crypto_option == "没有密码":
+                elif crypto_option == "普通文本":
                     self.fileCryptoStatus.set("")
 
         self.set_text_size()
@@ -198,16 +198,16 @@ class Window(ttk.Frame):
         save_text = self.fileShowText.get(0.0, 'end')
         password = self.password.get()
 
-        if crypto_option == "输入密码":
+        if crypto_option == "解密文本":
             save_text = StringCrypto(password).encrypt(save_text)
             self.fileCryptoStatus.set("[已加密]")
             with open(file_path, "w") as f:
                 f.write(save_text)
-        elif crypto_option == "没有密码":
+        elif crypto_option == "普通文本":
             self.fileCryptoStatus.set("")
             with open(file_path, "w") as f:
                 f.write(save_text)
-        elif crypto_option == "加密文件":
+        elif crypto_option == "解密文件":
             save_data = BinaryDataCrypto(self.password.get()).encrypt(save_text.encode(self.str_ecoding))
             with open(file_path, "wb") as f:
                 f.write(save_data)
@@ -223,7 +223,7 @@ class Window(ttk.Frame):
 
 
 # 通过外部参数直接打开文本窗口
-def main_window(txt_path="", password="", crypto_option="没有密码"):
+def main_window(txt_path="", password="", crypto_option="普通文本"):
     app = Window(master=None, txt_path=txt_path, password=password, crypto_option=crypto_option)
     # 设置窗口标题:
     app.master.title("文本查看器")
