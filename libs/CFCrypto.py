@@ -108,6 +108,23 @@ class ByteCrypto:
         return unpad(self.cipher.decrypt(data_to_decrypt), self.multiple_of_byte)
 
 
+# 将二进制数据加密或解密，返回二进制数据(用于小文件)
+class BinaryDataCrypto:
+    def __init__(self, password, salt="", use_md5=True):
+        # 生成密钥时，选择是否加盐，是否使用md5值
+        self.key = gen_aes_key(password, salt, use_md5)
+        # AES的ECB模式，数据的长度必须为16字节的倍数
+        self.multiple_of_byte = 16
+        # 使用ECB模式进行加密解密
+        self.cipher = AES.new(self.key, AES.MODE_ECB)
+
+    def encrypt(self, data_to_encrypt):
+        return self.cipher.encrypt(pad(data_to_encrypt, self.multiple_of_byte))
+
+    def decrypt(self, data_to_decrypt):
+        return unpad(self.cipher.decrypt(data_to_decrypt), self.multiple_of_byte)
+
+
 # 文件加密解密类
 class FileCrypto(object):
     def __init__(self, password, salt="", use_md5=True, block_size=10 * 1024 * 1024):
