@@ -1,12 +1,10 @@
-import os
+import tkinter.ttk as ttk
 import logging
-import io
 import chardet
 import tkinter.filedialog as filedialog
 import tkinter.messagebox as tkmessagebox
-from libs.json2gui import *
 from libs.CFCrypto import StringCrypto, ByteCrypto, BinaryDataCrypto
-from libs.Util import TextSection
+from libs.Util import *
 
 logging.basicConfig(level=logging.ERROR)
 TEXT_DEFAULT_SIZE = 12

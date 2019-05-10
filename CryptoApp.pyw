@@ -4,9 +4,6 @@ import tkinter.messagebox as messagebox
 import TextLook
 import ImgLook
 import Cryptor
-import FileSplit
-import RandomPassword
-import MD5Generate
 
 
 class RootWindow(ttk.Frame):
@@ -22,9 +19,6 @@ class RootWindow(ttk.Frame):
         option_menu = tk.Menu(self.menubar, tearoff=0)
         option_menu.add_command(label="文本查看", command=self.text_look)
         option_menu.add_command(label="图片查看", command=self.img_look)
-        option_menu.add_command(label="随机密码", command=self.random_password)
-        option_menu.add_command(label="文件分割", command=self.file_split)
-        option_menu.add_command(label="MD5值", command=self.md5_gen)
         option_menu.add_command(label="加密解密", command=self.crypto)
         option_menu.add_separator()
         option_menu.add_command(label="退出", command=self.quit_program)
@@ -63,24 +57,6 @@ class RootWindow(ttk.Frame):
         self.master.bind("<Key>", self.ChildWindow.key_event)
         self.master.title("图片查看器")
         self.master.minsize(600, 600)
-
-    def random_password(self):
-        self.clear_window()
-        self.ChildWindow = RandomPassword.Window("RandomPasswordUI.json", self)
-        self.master.title("随机密码生成器")
-        self.master.minsize(600, 30)
-
-    def file_split(self):
-        self.clear_window()
-        self.ChildWindow = FileSplit.Window("FileSplitUI.json", self)
-        self.master.title("文件分割合并器")
-        self.master.minsize(600, 30)
-
-    def md5_gen(self):
-        self.clear_window()
-        self.ChildWindow = MD5Generate.Window("MD5GenerateUI.json")
-        self.master.title("MD5值生成器")
-        self.master.minsize(600, 30)
 
     def crypto(self):
         self.clear_window()

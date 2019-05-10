@@ -28,6 +28,14 @@ def is_sub_path(output_path, input_path):
         return False
 
 
+# 设置滚动条与框体的绑定
+def set_scrollbar(widget, scrollbar_x, scrollbar_y):
+    scrollbar_y["command"] = widget.yview
+    scrollbar_x["command"] = widget.xview
+    widget['xscrollcommand'] = scrollbar_x.set
+    widget['yscrollcommand'] = scrollbar_y.set
+
+
 # 文本选中时的处理
 class TextSection(object):
     def __init__(self, master_widget, text_area):

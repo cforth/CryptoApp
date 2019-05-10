@@ -1,11 +1,13 @@
 import io
 import os
 import logging
+import tkinter as tk
+import tkinter.ttk as ttk
 import tkinter.filedialog as filedialog
 import tkinter.messagebox as tkmessagebox
-from libs.json2gui import *
 from libs.CFCrypto import ByteCrypto, StringCrypto
 from libs.CFCanvas import CFCanvas
+from libs.Util import set_combobox_item
 
 logging.basicConfig(level=logging.INFO)
 
