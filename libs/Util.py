@@ -36,6 +36,27 @@ def set_scrollbar(widget, scrollbar_x, scrollbar_y):
     widget['yscrollcommand'] = scrollbar_y.set
 
 
+# 判断文件名是否是图片
+def is_img(file_name):
+    img_ext_list = ['bmp', 'dib', 'rle', 'emf', 'gif',
+                    'jpg', 'jpeg', 'jpe', 'jif', 'pcx',
+                    'dcx', 'pic', 'png', 'tga', 'tif',
+                    'tiff', 'xif', 'wmf', 'jfif']
+    if os.path.splitext(file_name)[-1][1:] in img_ext_list:
+        return True
+    else:
+        return False
+
+
+# 判断文件名是否是文本文件
+def is_txt(file_name):
+    txt_ext_list = ['txt', 'py', 'json']
+    if os.path.splitext(file_name)[-1][1:] in txt_ext_list:
+        return True
+    else:
+        return False
+
+
 # 文本选中时的处理
 class TextSection(object):
     def __init__(self, master_widget, text_area):

@@ -67,9 +67,7 @@ class Window(ttk.Frame):
         self.tree_menu = tk.Menu(self, tearoff=0)
         self.tree_menu.add_command(label="复制地址", command=self.on_copy_file_path)
         self.tree_menu.add_separator()
-        self.tree_menu.add_command(label="打开文本", command=self.on_open_txt)
-        self.tree_menu.add_separator()
-        self.tree_menu.add_command(label="打开图片", command=self.on_open_img)
+        self.tree_menu.add_command(label="打开文件", command=self.on_open_file)
         self.tree_menu.add_separator()
         self.tree_menu.add_command(label="打开文件夹", command=self.on_open_dir_path)
         # 输入框右键菜单
@@ -150,35 +148,57 @@ class Window(ttk.Frame):
         self.clipboard_clear()
         self.clipboard_append(file_select_path)
 
-    # 打开文本文件
-    def on_open_txt(self):
+    # 右键菜单中，打开文件
+    def on_open_file(self):
         if self.tree.selection():
             item_values = self.tree.item(self.tree.selection()[0])['values']
             file_select_path = item_values[0] if item_values else ""
-            if self.cryptOption.get() in ["加密", "加密预览"]:
-                p = Process(target=TextLook.main_window, args=(file_select_path,))
-                p.start()
-            elif self.cryptOption.get() in ["解密", "解密预览"]:
-                password = self.passwordEntry.get()
-                p = Process(target=TextLook.main_window, args=(file_select_path, password, "解密文件"))
-                p.start()
+            file_select_name = os.path.basename(file_select_path)
+            if file_select_name:
+                crypto_option = self.cryptOption.get()
+                crypto_password = self.passwordEntry.get()
+                name_crypto_option = self.nameCryptoOptionCombobox.get()
+                if crypto_option in ["加密", "加密预览"]:
+                    self.open_file(file_select_name, file_select_path)
+                elif crypto_option in ["解密", "解密预览"]:
+                    if name_crypto_option == "保持文件名":
+                        self.open_file(file_select_name, file_select_path)
+                    elif name_crypto_option == "修改文件名":
+                        file_decrypt_name = StringCrypto(crypto_password).decrypt(file_select_name)
+                        self.open_file(file_decrypt_name, file_select_path)
+
+    # 根据文件后缀名类型打开文件
+    def open_file(self, file_decrypt_name, file_select_path):
+        if is_img(file_decrypt_name):
+            self.on_open_img(file_select_path)
+        elif is_txt(file_decrypt_name):
+            self.on_open_txt(file_select_path)
+        else:
+            tkmessagebox.showerror("错误", "暂时不支持打开此类文件!")
+
+    # 打开文本文件
+    def on_open_txt(self, file_select_path):
+        if self.cryptOption.get() in ["加密", "加密预览"]:
+            p = Process(target=TextLook.main_window, args=(file_select_path,))
+            p.start()
+        elif self.cryptOption.get() in ["解密", "解密预览"]:
+            password = self.passwordEntry.get()
+            p = Process(target=TextLook.main_window, args=(file_select_path, password, "解密文件"))
+            p.start()
 
     # 打开图片文件
-    def on_open_img(self):
-        if self.tree.selection():
-            item_values = self.tree.item(self.tree.selection()[0])['values']
-            file_select_path = item_values[0] if item_values else ""
-            if self.cryptOption.get() in ["加密", "加密预览"]:
-                p = Process(target=ImgLook.main_window, args=(file_select_path,))
+    def on_open_img(self, file_select_path):
+        if self.cryptOption.get() in ["加密", "加密预览"]:
+            p = Process(target=ImgLook.main_window, args=(file_select_path,))
+            p.start()
+        elif self.cryptOption.get() in ["解密", "解密预览"]:
+            password = self.passwordEntry.get()
+            if self.nameCryptoOptionCombobox.get() == "修改文件名":
+                p = Process(target=ImgLook.main_window, args=(file_select_path, password, "解密文件"))
                 p.start()
-            elif self.cryptOption.get() in ["解密", "解密预览"]:
-                password = self.passwordEntry.get()
-                if self.nameCryptoOptionCombobox.get() == "修改文件名":
-                    p = Process(target=ImgLook.main_window, args=(file_select_path, password, "解密文件"))
-                    p.start()
-                elif self.nameCryptoOptionCombobox.get() == "保持文件名":
-                    p = Process(target=ImgLook.main_window, args=(file_select_path, password, "解密保名"))
-                    p.start()
+            elif self.nameCryptoOptionCombobox.get() == "保持文件名":
+                p = Process(target=ImgLook.main_window, args=(file_select_path, password, "解密保名"))
+                p.start()
 
     # 打开文件所在的文件夹
     def on_open_dir_path(self):
