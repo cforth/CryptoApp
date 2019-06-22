@@ -111,6 +111,7 @@ class Window(ttk.Frame):
         self.bind("<<DisableCrypto>>", self.disable_crypto_button)
         self.bind("<<AllowCrypto>>", self.allow_crypto_button)
         self.tree.bind("<Button-3>", self.pop_tree_menu)
+        self.tree.bind("<Double-Button-1>", self.on_open_file)
         self.textFromEntry.bind("<FocusIn>", self.get_current_widget)
         self.textToEntry.bind("<FocusIn>", self.get_current_widget)
         self.textFromEntry.bind("<Button-3>", self.pop_entry_menu)
@@ -149,7 +150,7 @@ class Window(ttk.Frame):
         self.clipboard_append(file_select_path)
 
     # 右键菜单中，打开文件
-    def on_open_file(self):
+    def on_open_file(self, event=None):
         if self.tree.selection():
             item_values = self.tree.item(self.tree.selection()[0])['values']
             file_select_path = item_values[0] if item_values else ""
@@ -169,9 +170,9 @@ class Window(ttk.Frame):
 
     # 根据文件后缀名类型打开文件
     def open_file(self, file_decrypt_name, file_select_path):
-        if is_img(file_decrypt_name):
+        if is_img(file_decrypt_name.lower()):
             self.on_open_img(file_select_path)
-        elif is_txt(file_decrypt_name):
+        elif is_txt(file_decrypt_name.lower()):
             self.on_open_txt(file_select_path)
         else:
             tkmessagebox.showerror("错误", "暂时不支持打开此类文件!")
