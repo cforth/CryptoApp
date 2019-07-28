@@ -8,6 +8,7 @@ import tkinter.messagebox as tkmessagebox
 from libs.CFCrypto import ByteCrypto, StringCrypto
 from libs.CFCanvas import CFCanvas
 from libs.Util import set_combobox_item
+from libs.Util import IMG_EXT_LIST
 
 logging.basicConfig(level=logging.INFO)
 
@@ -73,8 +74,6 @@ class Window(ttk.Frame):
         self.jumpPageNumberButton.grid(sticky=('w', 'e'), row=3, column=5)
         self.jumpPageNumberButton['command'] = self.jump_page_callback
 
-        # 支持的图片格式后缀
-        self.img_ext = [".bmp", ".gif", ".jpg", ".png", ".tiff", ".ico", ".jpeg"]
         # 存储图片地址列表，用于前后翻页
         self.img_list = []
         # 保存当前的图片路径
@@ -154,7 +153,7 @@ class Window(ttk.Frame):
             for img_name in os.listdir(img_dir_path):
                 try:
                     decrypt_img_name = StringCrypto(self.password.get()).decrypt(img_name)
-                    if os.path.splitext(decrypt_img_name.lower())[1] in self.img_ext:
+                    if os.path.splitext(decrypt_img_name.lower())[1][1:] in IMG_EXT_LIST:
                         decrypt_img_name_list.append(decrypt_img_name)
                 except Exception as e:
                     logging.error("Decrypt img name error!")
@@ -166,7 +165,7 @@ class Window(ttk.Frame):
 
         elif crypto_option == "解密保名" or crypto_option == "不需解密":
             self.img_list = [os.path.join(img_dir_path, img_name) for img_name in os.listdir(img_dir_path)
-                             if os.path.splitext(img_name.lower())[1] in self.img_ext]
+                             if os.path.splitext(img_name.lower())[1][1:] in IMG_EXT_LIST]
 
     # 解密字符串方法
     def decrypt_string(self, str):
@@ -378,7 +377,7 @@ class Window(ttk.Frame):
             try:
                 decrypt_img_name = StringCrypto(self.password.get()).decrypt(img_name)
                 # 如果图片后缀不支持，则直接返回
-                if os.path.splitext(decrypt_img_name.lower())[1] not in self.img_ext:
+                if os.path.splitext(decrypt_img_name.lower())[1][1:] not in IMG_EXT_LIST:
                     tkmessagebox.showerror("错误", "文件格式不支持")
                     return
                 if page_option == "单页":
@@ -402,7 +401,7 @@ class Window(ttk.Frame):
         elif crypto_option == "不需解密":
             try:
                 # 如果图片后缀不支持，则直接返回
-                if os.path.splitext(img_name.lower())[1] not in self.img_ext:
+                if os.path.splitext(img_name.lower())[1][1:] not in IMG_EXT_LIST:
                     tkmessagebox.showerror("错误", "文件格式不支持")
                     return
                 if page_option == "单页":
@@ -426,7 +425,7 @@ class Window(ttk.Frame):
         elif crypto_option == "解密保名":
             try:
                 # 如果图片后缀不支持，则直接返回
-                if os.path.splitext(img_name.lower())[1] not in self.img_ext:
+                if os.path.splitext(img_name.lower())[1][1:] not in IMG_EXT_LIST:
                     tkmessagebox.showerror("错误", "文件格式不支持")
                     return
                 if page_option == "单页":

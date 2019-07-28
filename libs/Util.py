@@ -1,6 +1,12 @@
 import os
 import tkinter as tk
 
+# 支持的图片格式后缀
+IMG_EXT_LIST = ['bmp', 'dib', 'rle', 'emf', 'gif',
+                'jpg', 'jpeg', 'jpe', 'jif', 'pcx',
+                'dcx', 'pic', 'png', 'tga', 'tif',
+                'tiff', 'xif', 'wmf', 'jfif', 'ico']
+
 
 # 计算文件夹内的文件个数
 def count_files(dir_path):
@@ -38,11 +44,7 @@ def set_scrollbar(widget, scrollbar_x, scrollbar_y):
 
 # 判断文件名是否是图片
 def is_img(file_name):
-    img_ext_list = ['bmp', 'dib', 'rle', 'emf', 'gif',
-                    'jpg', 'jpeg', 'jpe', 'jif', 'pcx',
-                    'dcx', 'pic', 'png', 'tga', 'tif',
-                    'tiff', 'xif', 'wmf', 'jfif']
-    if os.path.splitext(file_name)[-1][1:] in img_ext_list:
+    if os.path.splitext(file_name)[-1][1:] in IMG_EXT_LIST:
         return True
     else:
         return False
