@@ -452,11 +452,11 @@ class Window(ttk.Frame):
             return
 
         if crypto_option == "加密预览":
-            if data_option == "文件" or data_option == "文件夹":
+            if data_option == "文件" or data_option == "文件夹" and is_handle_name:
                 DirShowHandle(self, self.tree, input_text, lambda x: StringCrypto(password).encrypt(x)).start()
 
         elif crypto_option == "解密预览":
-            if data_option == "文件" or data_option == "文件夹":
+            if data_option == "文件" or data_option == "文件夹" and is_handle_name:
                 DirShowHandle(self, self.tree, input_text, lambda x: StringCrypto(password).decrypt(x)).start()
 
         elif data_option == "字符串":
