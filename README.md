@@ -38,5 +38,5 @@
  
  * Windows系统
     
-    需要在环境变量Path中增加python安装目录路径，双击快捷方式CryothApp.lnk即可。
+    需要在环境变量Path中增加python安装目录路径，双击Crypto.pyw文件即可。
  
