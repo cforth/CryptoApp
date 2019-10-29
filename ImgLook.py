@@ -83,7 +83,7 @@ class Window(ttk.Frame):
         # 设置图片最大的宽度
         self.img_max_width = 1960
         # 设置默认的图片宽度，并设置图片大小滑动条的位置
-        self.zoom_width = self.img_max_width * 0.45
+        self.zoom_width = self.img_max_width * 0.22
         # 图片需要逆时针旋转的角度
         self.rotate_angle = 0
         self.imgSizeScale.set(self.zoom_width * 100 / self.img_max_width)
