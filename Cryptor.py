@@ -123,7 +123,7 @@ class Window(ttk.Frame):
         self.dataOptionCombobox.state(('readonly',))
         self.nameCryptoOptionCombobox.state(('readonly',))
         self.cryptOptionCombobox.config(values=["加密", "解密", "加密预览", "解密预览"])
-        self.dataOptionCombobox.config(values=["字符串", "文件", "文件夹"])
+        self.dataOptionCombobox.config(values=["字符串", "文件", "文件夹", "文件夹名称"])
         self.nameCryptoOptionCombobox.config(values=["修改文件名", "保持文件名"])
         set_combobox_item(self.cryptOptionCombobox, "加密", True)
         set_combobox_item(self.dataOptionCombobox, "字符串", True)
@@ -253,11 +253,18 @@ class Window(ttk.Frame):
         if self.dataOption.get() == "字符串":
             self.fileFromChooseButton["state"] = "disable"
             self.fileToChooseButton["state"] = "disable"
+            self.textToEntry["state"] = "normal"
             self.nameCryptoOptionCombobox["state"] = "disable"
         elif self.dataOption.get() == "文件" or self.dataOption.get() == "文件夹":
             self.fileFromChooseButton["state"] = "normal"
             self.fileToChooseButton["state"] = "normal"
+            self.textToEntry["state"] = "normal"
             self.nameCryptoOptionCombobox["state"] = "readonly"
+        elif self.dataOption.get() == "文件夹名称":
+            self.fileFromChooseButton["state"] = "normal"
+            self.fileToChooseButton["state"] = "disable"
+            self.textToEntry["state"] = "disable"
+            self.nameCryptoOptionCombobox["state"] = "disable"
 
     # 设置路径输入是否可用
     def crypt_choose_event(self, event=None):
@@ -282,7 +289,7 @@ class Window(ttk.Frame):
             # 选择输入文件路径后，在文件浏览器中选中的文件
             if file_path:
                 DirShowHandle(self, self.tree, file_path, lambda x: x).start()
-        elif self.dataOption.get() == "文件夹":
+        elif self.dataOption.get() == "文件夹" or self.dataOption.get() == "文件夹名称":
             file_path = filedialog.askdirectory()
             # 选择输入文件夹路径后，在文件浏览器中显示路径下的内容
             if file_path:
@@ -512,6 +519,15 @@ class Window(ttk.Frame):
                 self.dir_encrypt(input_text, output_text, password, is_handle_name)
             elif crypto_option == "解密":
                 self.dir_decrypt(input_text, output_text, password, is_handle_name)
+
+        elif data_option == "文件夹名称":
+            if not os.path.exists(input_text):
+                tkmessagebox.showerror("错误", "输入路径不存在！")
+                return
+            if crypto_option == "加密":
+                DirNameCrypto(password).encrypt(input_text)
+            elif crypto_option == "解密":
+                DirNameCrypto(password).decrypt(input_text)
 
 
 # 预览加密文件名称

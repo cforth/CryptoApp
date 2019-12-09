@@ -9,6 +9,7 @@ from Crypto.Random import get_random_bytes
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Util.Padding import pad, unpad
 import logging
+import json
 
 
 # '\0'填充密码
@@ -374,6 +375,71 @@ class RSACrypto(object):
                 f.write(data)
 
 
+# 文件假名称加密解密类
+class DirNameCrypto(object):
+    def __init__(self, password, config_file=None):
+        self.string_crypto = StringCrypto(password)
+        # 用来保存文件名MD5值的字典的配置文件
+        self.config_file = config_file
+        # 用来保存文件名MD5值的字典
+        self.file_name_md5_dict = {}
+
+    # 将文件名替换成MD5值,并保存至字典中
+    def file_name_encrypt(self, file_name):
+        file_name_encrypt_str = self.string_crypto.encrypt(file_name)
+        file_name_md5 = get_str_md5(file_name_encrypt_str)
+        self.file_name_md5_dict[file_name_md5] = file_name_encrypt_str
+        return file_name_md5
+
+    # 读取MD5值对应的文件名
+    def file_name_decrypt(self, file_name_md5):
+        file_name_encrypt_str = self.file_name_md5_dict[file_name_md5]
+        file_name = self.string_crypto.decrypt(file_name_encrypt_str)
+        return file_name
+
+    # 文件夹处理方法
+    @staticmethod
+    def dir_handle(input_dir, name_handle_func):
+        real_input_dir = os.path.abspath(input_dir).replace('\\', '/')
+        if not os.path.exists(real_input_dir):
+            raise ValueError('Input Dir not exists: %s', real_input_dir)
+        for path, subdir, files in os.walk(input_dir, topdown=False):
+            for d in subdir:
+                original_dir = os.path.join(os.path.abspath(path), d)
+                try:
+                    rename_dir = os.path.join(os.path.abspath(path), name_handle_func(d))
+                    os.rename(original_dir, rename_dir)
+                except Exception as e:
+                    logging.exception(e)
+            for f in files:
+                original_file = os.path.join(os.path.abspath(path), f)
+                try:
+                    rename_file = os.path.join(os.path.abspath(path), name_handle_func(f))
+                    os.rename(original_file, rename_file)
+                except Exception as e:
+                    logging.exception(e)
+
+    def encrypt(self, input_dir):
+        DirNameCrypto.dir_handle(input_dir, self.file_name_encrypt)
+        # 保存文件名MD5值字典
+        if not self.config_file:
+            input_dir_name = os.path.basename(os.path.abspath(input_dir))
+            encrypt_config_name = self.file_name_encrypt(input_dir_name) + ".json"
+            self.config_file = os.path.join(os.path.dirname(os.path.abspath(input_dir)), encrypt_config_name)
+        with open(self.config_file, "w") as f:
+            json.dump(self.file_name_md5_dict, f)
+
+    def decrypt(self, input_dir):
+        # 读取文件名MD5值字典
+        if not self.config_file:
+            input_dir_name = os.path.basename(os.path.abspath(input_dir))
+            encrypt_config_name = self.file_name_encrypt(input_dir_name) + ".json"
+            self.config_file = os.path.join(os.path.dirname(os.path.abspath(input_dir)), encrypt_config_name)
+        with open(self.config_file, "r") as f:
+            self.file_name_md5_dict = json.load(f)
+        DirNameCrypto.dir_handle(input_dir, self.file_name_decrypt)
+
+
 # 文件MD5值生成
 def get_file_md5(filename):
     if not os.path.isfile(filename):
@@ -395,3 +461,4 @@ def get_str_md5(string):
     my_hash = hashlib.md5()
     my_hash.update(string.encode('utf-8'))
     return my_hash.hexdigest()
+
