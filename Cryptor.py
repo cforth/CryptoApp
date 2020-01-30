@@ -461,10 +461,21 @@ class Window(ttk.Frame):
         if crypto_option == "加密预览":
             if data_option == "文件" or data_option == "文件夹" and is_handle_name:
                 DirShowHandle(self, self.tree, input_text, lambda x: StringCrypto(password).encrypt(x)).start()
+            elif data_option == "文件夹名称":
+                DirShowHandle(self, self.tree, input_text, lambda x: get_str_md5(StringCrypto(password).encrypt(x))).start()
 
         elif crypto_option == "解密预览":
             if data_option == "文件" or data_option == "文件夹" and is_handle_name:
                 DirShowHandle(self, self.tree, input_text, lambda x: StringCrypto(password).decrypt(x)).start()
+            elif data_option == "文件夹名称":
+                # 读取文件名MD5值字典
+                input_dir_name = os.path.basename(os.path.abspath(input_text))
+                encrypt_config_name = get_str_md5(StringCrypto(password).encrypt(input_dir_name)) + ".json"
+                config_file = os.path.join(os.path.dirname(os.path.abspath(input_text)), encrypt_config_name)
+                file_name_md5_dict = {}
+                with open(config_file, "r") as f:
+                    file_name_md5_dict = json.load(f)
+                DirShowHandle(self, self.tree, input_text, lambda x: StringCrypto(password).decrypt(file_name_md5_dict[x])).start()
 
         elif data_option == "字符串":
             if crypto_option == "加密":

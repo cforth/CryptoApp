@@ -375,7 +375,7 @@ class RSACrypto(object):
                 f.write(data)
 
 
-# 文件假名称加密解密类
+# 文件夹名称加密解密类
 class DirNameCrypto(object):
     def __init__(self, password, config_file=None):
         self.string_crypto = StringCrypto(password)
