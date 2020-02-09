@@ -1,6 +1,5 @@
 import tkinter.ttk as ttk
 import logging
-import chardet
 import tkinter.filedialog as filedialog
 import tkinter.messagebox as tkmessagebox
 from libs.CFCrypto import StringCrypto, ByteCrypto, BinaryDataCrypto
@@ -74,7 +73,7 @@ class Window(ttk.Frame):
         self.current_file_path = None
         self.file_text = None
         # 保存文件的默认编码
-        self.str_ecoding = "utf-8"
+        self.str_encoding = "utf-8"
         # 设置文本区右键菜单
         self.menu = tk.Menu(self, tearoff=0)
         self.set_text_section()
@@ -156,8 +155,7 @@ class Window(ttk.Frame):
         if crypto_option == "解密文件":
             try:
                 file_str = ByteCrypto(self.password.get()).decrypt(self.current_file_path)
-                self.str_ecoding = chardet.detect(file_str)['encoding']
-                self.file_text = file_str.decode(self.str_ecoding)
+                self.file_text = file_str.decode(self.str_encoding)
                 self.fileCryptoStatus.set("[已文件加密]")
             except Exception as e:
                 self.file_text = ""
@@ -206,7 +204,7 @@ class Window(ttk.Frame):
             with open(file_path, "w") as f:
                 f.write(save_text)
         elif crypto_option == "解密文件":
-            save_data = BinaryDataCrypto(self.password.get()).encrypt(save_text.encode(self.str_ecoding))
+            save_data = BinaryDataCrypto(self.password.get()).encrypt(save_text.encode(self.str_encoding))
             with open(file_path, "wb") as f:
                 f.write(save_data)
             self.fileCryptoStatus.set("[已文件加密]")
