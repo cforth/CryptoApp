@@ -437,6 +437,26 @@ class Window(ttk.Frame):
             tkmessagebox.showerror("错误", "输入文件格式或者密码错误！")
         return ""
 
+    # 文件夹名称加密
+    def dir_name_md5_encrypt(self, dir_path, password):
+        self.crypto_task = DirNameCrypto(password)
+        try:
+            crypto_thread = Thread(target=self.crypto_task.encrypt, args=(dir_path,))
+            crypto_thread.start()
+        except Exception as e:
+            logging.warning("Convert error: ", e)
+            tkmessagebox.showerror("错误", "输入文件格式或者密码错误！")
+
+    # 文件夹名称解密
+    def dir_name_md5_decrypt(self, dir_path, password):
+        self.crypto_task = DirNameCrypto(password)
+        try:
+            crypto_thread = Thread(target=self.crypto_task.decrypt, args=(dir_path,))
+            crypto_thread.start()
+        except Exception as e:
+            logging.warning("Convert error: ", e)
+            tkmessagebox.showerror("错误", "输入文件格式或者密码错误！")
+
     # 强制停止任务
     def stop_task(self):
         if self.crypto_task:
@@ -536,9 +556,9 @@ class Window(ttk.Frame):
                 tkmessagebox.showerror("错误", "输入路径不存在！")
                 return
             if crypto_option == "加密":
-                DirNameCrypto(password).encrypt(input_text)
+                self.dir_name_md5_encrypt(input_text, password)
             elif crypto_option == "解密":
-                DirNameCrypto(password).decrypt(input_text)
+                self.dir_name_md5_decrypt(input_text, password)
 
 
 # 预览加密文件名称

@@ -383,6 +383,25 @@ class DirNameCrypto(object):
         self.config_file = config_file
         # 用来保存文件名MD5值的字典
         self.file_name_md5_dict = {}
+        # 加密解密的状态
+        self.crypto_status = False
+        # 已经加密或解密的文件个数
+        self.read_count = 0
+        # 记录是否被外部中止
+        self.stop_flag = False
+
+    # 获取加密解密状态与已经处理的文件个数，用于显示状态(待完成)
+    def get_status(self):
+        return self.crypto_status, self.read_count
+
+    # 停止任务(待完成)
+    def stop_handle(self):
+        self.crypto_status = False
+        self.stop_flag = True
+
+    # 是否被外部中止任务(待完成)
+    def if_stop(self):
+        return self.stop_flag
 
     # 将文件名替换成MD5值,并保存至字典中
     def file_name_encrypt(self, file_name):
