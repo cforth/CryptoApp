@@ -10,7 +10,7 @@
 
 * Python
     * Python 3.6 +
-    * (pycryptodome 3.6.6 +)[https://pypi.org/project/pycryptodome/#files]
+    * [pycryptodome 3.6.6 +](https://pypi.org/project/pycryptodome/#files)
     * chardet 3.0.4 +
     * Pillow 5.0.0 +
 * Windows(32位/64位)
