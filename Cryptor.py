@@ -440,9 +440,14 @@ class Window(ttk.Frame):
     # 文件夹名称加密
     def dir_name_md5_encrypt(self, dir_path, password):
         self.crypto_task = DirNameCrypto(password)
+        max_length = count_files(dir_path)
         try:
             crypto_thread = Thread(target=self.crypto_task.encrypt, args=(dir_path,))
+            update_task_length_thread = Thread(target=self.update_task_now_length, args=(self.crypto_task, max_length,))
+            update_process_thread = Thread(target=self.update_process_bar, args=(max_length,))
             crypto_thread.start()
+            update_task_length_thread.start()
+            update_process_thread.start()
         except Exception as e:
             logging.warning("Convert error: ", e)
             tkmessagebox.showerror("错误", "输入文件格式或者密码错误！")
@@ -450,9 +455,14 @@ class Window(ttk.Frame):
     # 文件夹名称解密
     def dir_name_md5_decrypt(self, dir_path, password):
         self.crypto_task = DirNameCrypto(password)
+        max_length = count_files(dir_path)
         try:
             crypto_thread = Thread(target=self.crypto_task.decrypt, args=(dir_path,))
+            update_task_length_thread = Thread(target=self.update_task_now_length, args=(self.crypto_task, max_length,))
+            update_process_thread = Thread(target=self.update_process_bar, args=(max_length,))
             crypto_thread.start()
+            update_task_length_thread.start()
+            update_process_thread.start()
         except Exception as e:
             logging.warning("Convert error: ", e)
             tkmessagebox.showerror("错误", "输入文件格式或者密码错误！")
