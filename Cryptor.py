@@ -10,6 +10,7 @@ from threading import Thread
 from multiprocessing import Process
 from libs.Util import *
 from libs.CFCrypto import *
+import libs.CFPlayer as CFPlayer
 import ImgLook
 import TextLook
 
@@ -174,6 +175,8 @@ class Window(ttk.Frame):
             self.on_open_img(file_select_path)
         elif is_txt(file_decrypt_name.lower()):
             self.on_open_txt(file_select_path)
+        elif is_video(file_decrypt_name.lower()):
+            self.on_open_video(file_select_path)
         else:
             tkmessagebox.showerror("错误", "暂时不支持打开此类文件!")
 
@@ -200,6 +203,14 @@ class Window(ttk.Frame):
             elif self.nameCryptoOptionCombobox.get() == "保持文件名":
                 p = Process(target=ImgLook.main_window, args=(file_select_path, password, "解密保名"))
                 p.start()
+
+    # 打开视频文件
+    def on_open_video(self, file_select_path):
+        if self.cryptOption.get() in ["加密", "加密预览"]:
+            p = Process(target=CFPlayer.play, args=(file_select_path,))
+            p.start()
+        else:
+            pass
 
     # 打开文件所在的文件夹
     def on_open_dir_path(self):

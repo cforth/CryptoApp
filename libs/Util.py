@@ -59,6 +59,16 @@ def is_txt(file_name):
         return False
 
 
+# 判断文件名是否是视频文件
+def is_video(file_name):
+    video_ext_list = ['mp4', 'm4v', 'mov', 'qt', 'avi', 'flv', 'wmv', 'asf', 'mpeg', 'mpg', 'vob', 'mkv', 'rm', 'rmvb',
+                      'vob', 'ts', 'dat']
+    if os.path.splitext(file_name)[-1][1:] in video_ext_list:
+        return True
+    else:
+        return False
+
+
 # 文本选中时的处理
 class TextSection(object):
     def __init__(self, master_widget, text_area):

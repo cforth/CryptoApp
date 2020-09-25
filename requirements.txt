@@ -1,3 +1,4 @@
 chardet>=3.0.4
 Pillow>=5.0.0
 pycryptodome>=3.6.6
+pyglet>=1.5.7
