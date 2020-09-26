@@ -20,13 +20,13 @@ logging.basicConfig(level=logging.ERROR)
 class Window(ttk.Frame):
     def __init__(self, master=None):
         super().__init__(master, padding=2)
-        self.create_variables()
-        self.create_widgets()
-        self.create_layout()
-        self.create_bindings()
+        self.__init_variables()
+        self.__init_widgets()
+        self.__init_layout()
+        self.__init_bindings()
 
     # 创建控件中需要用到的变量
-    def create_variables(self):
+    def __init_variables(self):
         self.cryptOption = tk.StringVar()
         self.dataOption = tk.StringVar()
         self.nameOption = tk.StringVar()
@@ -38,7 +38,7 @@ class Window(ttk.Frame):
         self.crypto_task = None
 
     # 创建控件
-    def create_widgets(self):
+    def __init_widgets(self):
         self.cryptOptionCombobox = ttk.Combobox(self, width=10, textvariable=self.cryptOption)
         self.dataOptionCombobox = ttk.Combobox(self, width=10, textvariable=self.dataOption)
         # 选择文件夹选项时是否加密解密文件名
@@ -80,7 +80,7 @@ class Window(ttk.Frame):
         self.entry_menu.add_command(label="剪切", command=self.on_entry_cut)
 
     # 将控件布局
-    def create_layout(self):
+    def __init_layout(self):
         pad_w_e = dict(sticky=(tk.W, tk.E), padx="0.5m", pady="0.5m")
         self.passwordShowButton.grid(row=0, column=0, **pad_w_e)
         self.passwordEntry.grid(row=0, column=1, columnspan=3, **pad_w_e)
@@ -105,7 +105,7 @@ class Window(ttk.Frame):
         self.master.rowconfigure(0, weight=1)
 
     # 绑定事件
-    def create_bindings(self):
+    def __init_bindings(self):
         self.dataOptionCombobox.bind("<<ComboboxSelected>>", self.data_choose_event)
         self.cryptOptionCombobox.bind("<<ComboboxSelected>>", self.crypt_choose_event)
         # 绑定自定义事件给主窗口
