@@ -6,10 +6,12 @@ import logging
 import threading
 import time
 import subprocess
+import json
 from threading import Thread
 from multiprocessing import Process
 from libs.Util import *
-from libs.CFCrypto import *
+import libs.CFCrypto as CFCrypto
+import libs.CFCryptoX as CFCryptoX
 import libs.CFPlayer as CFPlayer
 import ImgLook
 import TextLook
@@ -29,6 +31,7 @@ class Window(ttk.Frame):
     def __init_variables(self):
         self.cryptOption = tk.StringVar()
         self.dataOption = tk.StringVar()
+        self.cryptModeOption = tk.StringVar()
         self.nameOption = tk.StringVar()
         self.process_var = tk.DoubleVar()
         self.process_label_var = tk.StringVar()
@@ -41,6 +44,8 @@ class Window(ttk.Frame):
     def __init_widgets(self):
         self.cryptOptionCombobox = ttk.Combobox(self, width=10, textvariable=self.cryptOption)
         self.dataOptionCombobox = ttk.Combobox(self, width=10, textvariable=self.dataOption)
+        # 选择使用哪种加密模式，ECB或CBC
+        self.cryptModeCombobox = ttk.Combobox(self, width=10, textvariable=self.cryptModeOption)
         # 选择文件夹选项时是否加密解密文件名
         self.nameCryptoOptionCombobox = ttk.Combobox(self, width=10, textvariable=self.nameOption)
         self.populate_comboboxes()
@@ -91,8 +96,9 @@ class Window(ttk.Frame):
         self.cryptOptionCombobox.grid(row=3, column=0, **pad_w_e)
         self.dataOptionCombobox.grid(row=3, column=1, **pad_w_e)
         self.nameCryptoOptionCombobox.grid(row=3, column=2, **pad_w_e)
-        self.run_button.grid(row=3, column=3, **pad_w_e)
-        self.progressBar.grid(row=4, column=0, columnspan=3, **pad_w_e)
+        self.cryptModeCombobox.grid(row=3, column=3, **pad_w_e)
+        self.progressBar.grid(row=4, column=0, columnspan=2, **pad_w_e)
+        self.run_button.grid(row=4, column=2, **pad_w_e)
         self.stop_button.grid(row=4, column=3, **pad_w_e)
         self.progressLabel.grid(row=5, column=0, columnspan=4, **pad_w_e)
         self.tree.grid(row=6, column=0, columnspan=4, sticky=(tk.N, tk.S, tk.E, tk.W))
@@ -123,12 +129,15 @@ class Window(ttk.Frame):
         self.cryptOptionCombobox.state(('readonly',))
         self.dataOptionCombobox.state(('readonly',))
         self.nameCryptoOptionCombobox.state(('readonly',))
+        self.cryptModeCombobox.state(('readonly',))
         self.cryptOptionCombobox.config(values=["加密", "解密", "加密预览", "解密预览"])
         self.dataOptionCombobox.config(values=["字符串", "文件", "文件夹", "文件夹名称"])
         self.nameCryptoOptionCombobox.config(values=["修改文件名", "保持文件名"])
+        self.cryptModeCombobox.config(values=["ECB", "CBC"])
         set_combobox_item(self.cryptOptionCombobox, "加密", True)
         set_combobox_item(self.dataOptionCombobox, "字符串", True)
         set_combobox_item(self.nameCryptoOptionCombobox, "修改文件名", True)
+        set_combobox_item(self.cryptModeCombobox, "ECB", True)
         self.nameCryptoOptionCombobox["state"] = "disable"
 
     # 获取当前事件的控件
@@ -166,7 +175,8 @@ class Window(ttk.Frame):
                     if name_crypto_option == "保持文件名":
                         self.open_file(file_select_name, file_select_path)
                     elif name_crypto_option == "修改文件名":
-                        file_decrypt_name = StringCrypto(crypto_password).decrypt(file_select_name)
+                        crypto_algorithm = self.choose_crypt_mode()
+                        file_decrypt_name = crypto_algorithm.StringCrypto(crypto_password).decrypt(file_select_name)
                         self.open_file(file_decrypt_name, file_select_path)
 
     # 根据文件后缀名类型打开文件
@@ -352,16 +362,24 @@ class Window(ttk.Frame):
             time.sleep(0.5)
         self.event_generate("<<AllowCrypto>>", when="tail")
 
+    # 选择加密解密使用的模式
+    def choose_crypt_mode(self):
+        if self.cryptModeOption.get() == "ECB":
+            return CFCrypto
+        elif self.cryptModeOption.get() == "CBC":
+            return CFCryptoX
+
     # 使用多线程加密文件
     def file_encrypt(self, file_path, output_dir_path, password, is_encrypt_name):
-        self.crypto_task = FileCrypto(password)
+        crypto_algorithm = self.choose_crypt_mode()
+        self.crypto_task = crypto_algorithm.FileCrypto(password)
         input_file_name = os.path.split(file_path)[1]
         max_length = os.path.getsize(file_path)
         update_task_length_thread = Thread(target=self.update_task_now_length, args=(self.crypto_task, max_length,))
         update_process_thread = Thread(target=self.update_process_bar, args=(max_length,))
         # is_encrypt_name为False时，不加密文件名
         if is_encrypt_name:
-            output_path = os.path.join(output_dir_path, StringCrypto(password).encrypt(input_file_name))
+            output_path = os.path.join(output_dir_path, crypto_algorithm.StringCrypto(password).encrypt(input_file_name))
         else:
             output_path = os.path.join(output_dir_path, input_file_name)
         if os.path.exists(output_path):
@@ -375,7 +393,8 @@ class Window(ttk.Frame):
 
     # 使用多线程解密文件
     def file_decrypt(self, file_path, output_dir_path, password, is_decrypt_name):
-        self.crypto_task = FileCrypto(password)
+        crypto_algorithm = self.choose_crypt_mode()
+        self.crypto_task = crypto_algorithm.FileCrypto(password)
         input_file_name = os.path.split(file_path)[1]
         max_length = os.path.getsize(file_path)
         update_task_length_thread = Thread(target=self.update_task_now_length, args=(self.crypto_task, max_length,))
@@ -383,7 +402,7 @@ class Window(ttk.Frame):
         try:
             # is_decrypt_name为False时，不解密文件名
             if is_decrypt_name:
-                output_path = os.path.join(output_dir_path, StringCrypto(password).decrypt(input_file_name))
+                output_path = os.path.join(output_dir_path, crypto_algorithm.StringCrypto(password).decrypt(input_file_name))
             else:
                 output_path = os.path.join(output_dir_path, input_file_name)
             if os.path.exists(output_path):
@@ -401,12 +420,13 @@ class Window(ttk.Frame):
 
     # 使用多线程加密文件夹
     def dir_encrypt(self, dir_path, output_dir_path, password, is_encrypt_name):
-        self.crypto_task = DirFileCrypto(password)
+        crypto_algorithm = self.choose_crypt_mode()
+        self.crypto_task = crypto_algorithm.DirFileCrypto(password)
         max_length = count_files(dir_path)
         update_task_length_thread = Thread(target=self.update_task_now_length, args=(self.crypto_task, max_length,))
         update_process_thread = Thread(target=self.update_process_bar, args=(max_length,))
         if is_encrypt_name:
-            output_path = os.path.join(output_dir_path, StringCrypto(password).encrypt(os.path.split(dir_path)[1]))
+            output_path = os.path.join(output_dir_path, crypto_algorithm.StringCrypto(password).encrypt(os.path.split(dir_path)[1]))
         else:
             output_path = os.path.join(output_dir_path, os.path.split(dir_path)[1])
         if os.path.exists(output_path):
@@ -423,13 +443,15 @@ class Window(ttk.Frame):
 
     # 使用多线程解密文件夹
     def dir_decrypt(self, dir_path, output_dir_path, password, is_decrypt_name):
-        self.crypto_task = DirFileCrypto(password)
+        crypto_algorithm = self.choose_crypt_mode()
+        self.crypto_task = crypto_algorithm.DirFileCrypto(password)
         max_length = count_files(dir_path)
         update_task_length_thread = Thread(target=self.update_task_now_length, args=(self.crypto_task, max_length,))
         update_process_thread = Thread(target=self.update_process_bar, args=(max_length,))
         try:
-            if is_decrypt_name:
-                output_path = os.path.join(output_dir_path, StringCrypto(password).decrypt(os.path.split(dir_path)[1]))
+            # CBC模式下，不需要对文件夹名字进行预先解密
+            if is_decrypt_name and self.cryptModeOption == "ECB":
+                output_path = os.path.join(output_dir_path, crypto_algorithm.StringCrypto(password).decrypt(os.path.split(dir_path)[1]))
             else:
                 output_path = os.path.join(output_dir_path, os.path.split(dir_path)[1])
             if os.path.exists(output_path):
@@ -450,7 +472,8 @@ class Window(ttk.Frame):
 
     # 文件夹名称加密
     def dir_name_md5_encrypt(self, dir_path, password):
-        self.crypto_task = DirNameCrypto(password)
+        crypto_algorithm = self.choose_crypt_mode()
+        self.crypto_task = crypto_algorithm.DirNameCrypto(password)
         max_length = count_files(dir_path)
         try:
             crypto_thread = Thread(target=self.crypto_task.encrypt, args=(dir_path,))
@@ -465,7 +488,8 @@ class Window(ttk.Frame):
 
     # 文件夹名称解密
     def dir_name_md5_decrypt(self, dir_path, password):
-        self.crypto_task = DirNameCrypto(password)
+        crypto_algorithm = self.choose_crypt_mode()
+        self.crypto_task = crypto_algorithm.DirNameCrypto(password)
         max_length = count_files(dir_path)
         try:
             crypto_thread = Thread(target=self.crypto_task.decrypt, args=(dir_path,))
@@ -485,6 +509,7 @@ class Window(ttk.Frame):
 
     # 执行加密或者解密任务
     def run_task(self):
+        crypto_algorithm = self.choose_crypt_mode()
         input_text = self.textFromEntry.get()
         output_text = self.textToEntry.get()
         password = self.passwordEntry.get()
@@ -501,29 +526,29 @@ class Window(ttk.Frame):
 
         if crypto_option == "加密预览":
             if data_option == "文件" or data_option == "文件夹" and is_handle_name:
-                DirShowHandle(self, self.tree, input_text, lambda x: StringCrypto(password).encrypt(x)).start()
+                DirShowHandle(self, self.tree, input_text, lambda x: crypto_algorithm.StringCrypto(password).encrypt(x)).start()
             elif data_option == "文件夹名称":
-                DirShowHandle(self, self.tree, input_text, lambda x: get_str_md5(StringCrypto(password).encrypt(x))).start()
+                DirShowHandle(self, self.tree, input_text, lambda x: crypto_algorithm.get_str_md5(crypto_algorithm.StringCrypto(password).encrypt(x))).start()
 
         elif crypto_option == "解密预览":
             if data_option == "文件" or data_option == "文件夹" and is_handle_name:
-                DirShowHandle(self, self.tree, input_text, lambda x: StringCrypto(password).decrypt(x)).start()
+                DirShowHandle(self, self.tree, input_text, lambda x: crypto_algorithm.StringCrypto(password).decrypt(x)).start()
             elif data_option == "文件夹名称":
                 # 读取文件名MD5值字典
                 input_dir_name = os.path.basename(os.path.abspath(input_text))
-                encrypt_config_name = get_str_md5(StringCrypto(password).encrypt(input_dir_name)) + ".json"
+                encrypt_config_name = crypto_algorithm.get_str_md5(crypto_algorithm.StringCrypto(password).encrypt(input_dir_name)) + ".json"
                 config_file = os.path.join(os.path.dirname(os.path.abspath(input_text)), encrypt_config_name)
                 file_name_md5_dict = {}
                 with open(config_file, "r") as f:
                     file_name_md5_dict = json.load(f)
-                DirShowHandle(self, self.tree, input_text, lambda x: StringCrypto(password).decrypt(file_name_md5_dict[x])).start()
+                DirShowHandle(self, self.tree, input_text, lambda x: crypto_algorithm.StringCrypto(password).decrypt(file_name_md5_dict[x])).start()
 
         elif data_option == "字符串":
             if crypto_option == "加密":
-                output_text = StringCrypto(password).encrypt(input_text)
+                output_text = crypto_algorithm.StringCrypto(password).encrypt(input_text)
             elif crypto_option == "解密":
                 try:
-                    output_text = StringCrypto(password).decrypt(input_text)
+                    output_text = crypto_algorithm.StringCrypto(password).decrypt(input_text)
                 except Exception as e:
                     logging.warning("Convert error: ", e)
                     output_text = "输入格式或者密码错误！"
