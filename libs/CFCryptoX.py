@@ -35,7 +35,7 @@ def folder_path_convert(folder_path: str, name_convert_func: callable) -> str:
 # 通过解密加密文件开头128个字节的块是否与加密标识相符，来判断密码是否正确
 def verify_password(password: str, iv: str, data_head: bytes) -> bool:
     try:
-        decrypt_head = ByteCrypto(password, iv).decrypt(data_head)
+        decrypt_head = BinaryDataCrypto(password, iv).decrypt(data_head)
         return True if decrypt_head[:len(ENCRYPT_MARK)] == ENCRYPT_MARK else False
     except Exception as e:
         print('Exception: ', e)
@@ -45,7 +45,7 @@ def verify_password(password: str, iv: str, data_head: bytes) -> bool:
 
 # 加密解密基类，设置密码和其他参数
 class BaseCrypto(object):
-    def __init__(self, password, iv_str=None, salt=None, use_md5=False, use_urlsafe=False, buffer_size=BUFFER_SIZE):
+    def __init__(self, password, iv_str=None, salt="", use_md5=False, use_urlsafe=False, buffer_size=BUFFER_SIZE):
         self.password = password
         # 生成密钥时，选择是否加盐，是否使用md5值
         self.key = gen_aes_key(password, salt, use_md5)
@@ -88,8 +88,8 @@ class BaseCrypto(object):
 
 # 字符串加密解密类
 class StringCrypto(BaseCrypto):
-    def __init__(self, password, iv_str=DEFAULT_IV_STR):
-        super().__init__(password, iv_str=iv_str, use_md5=True, use_urlsafe=True)
+    def __init__(self, password, iv_str=DEFAULT_IV_STR, salt="", use_md5=True, use_urlsafe=True):
+        super().__init__(password, iv_str=iv_str, salt=salt, use_md5=use_md5, use_urlsafe=use_urlsafe)
 
     # 加密字符串
     def encrypt(self, original_string):
@@ -115,10 +115,34 @@ class StringCrypto(BaseCrypto):
         return original_string
 
 
-# 将二进制数据加密或解密，返回二进制数据(一次性读入内存加密，用于小文件)
+# 将文件加密或解密，返回二进制数据(用于小文件)
 class ByteCrypto(BaseCrypto):
-    def __init__(self, password, iv_str=DEFAULT_IV_STR):
-        super().__init__(password, iv_str=iv_str, use_md5=True, use_urlsafe=True)
+    def __init__(self, password, iv_str=DEFAULT_IV_STR, salt="", use_md5=True):
+        super().__init__(password, iv_str=iv_str, salt=salt, use_md5=use_md5, use_urlsafe=True)
+
+    def encrypt(self, file_path):
+        if not os.path.exists(file_path):
+            raise ValueError('Input file path not exists: %s ', file_path)
+
+        with open(file_path, 'rb') as f:
+            original_data = f.read()
+        self.cipher = self.gen_cipher()
+        return self.cipher.encrypt(pad(original_data, AES.block_size))
+
+    def decrypt(self, file_path):
+        if not os.path.exists(file_path):
+            raise ValueError('Input file path not exists: %s ', file_path)
+
+        with open(file_path, 'rb') as f:
+            data_to_decrypt = f.read()
+        self.cipher = self.gen_cipher()
+        return unpad(self.cipher.decrypt(data_to_decrypt), AES.block_size)
+
+
+# 将二进制数据加密或解密，返回二进制数据(用于小文件)
+class BinaryDataCrypto(BaseCrypto):
+    def __init__(self, password, iv_str=DEFAULT_IV_STR, salt="", use_md5=True):
+        super().__init__(password, iv_str=iv_str, salt=salt, use_md5=use_md5, use_urlsafe=True)
 
     def encrypt(self, original_data):
         self.cipher = self.gen_cipher()
@@ -131,8 +155,8 @@ class ByteCrypto(BaseCrypto):
 
 # 将文件加密或解密，指定BUFFER_SIZE作为每次读取写入的字节数，用于大文件
 class FileCrypto(BaseCrypto):
-    def __init__(self, password, iv_str=DEFAULT_IV_STR):
-        super().__init__(password, iv_str=iv_str, use_md5=True, use_urlsafe=True)
+    def __init__(self, password, iv_str=DEFAULT_IV_STR, salt="", use_md5=True, block_size=BUFFER_SIZE):
+        super().__init__(password, iv_str=iv_str, salt=salt, use_md5=use_md5, use_urlsafe=True, buffer_size=block_size)
         # 加密解密的状态
         self.crypto_status = False
         # 已经读取的数据长度
@@ -170,7 +194,7 @@ class FileCrypto(BaseCrypto):
             # 读取到文件尾部时，执行尾部补位操作后加密
             data_end_handle_func = lambda d: self.cipher.encrypt(pad(d, AES.block_size))
             with open(output_file_path, 'wb') as out:
-                data_head = ByteCrypto(self.password, iv_str=self.iv_str).encrypt(ENCRYPT_MARK)
+                data_head = BinaryDataCrypto(self.password, iv_str=self.iv_str).encrypt(ENCRYPT_MARK)
                 out.write(data_head)
         elif crypto_option == "decrypt":
             data_handle_func = self.cipher.decrypt
