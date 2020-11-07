@@ -273,14 +273,14 @@ class DirFileCrypto(object):
         return self.stop_flag
 
     # 将文件名替换成MD5值,并保存至字典中
-    def file_name_encrypt(self, file_name):
+    def file_name_md5_encrypt(self, file_name):
         file_name_encrypt_str = self.string_crypto.encrypt(file_name)
         file_name_md5 = get_str_md5(file_name_encrypt_str)
         self.file_name_md5_dict[file_name_md5] = file_name_encrypt_str
         return file_name_md5
 
     # 读取MD5值对应的文件名
-    def file_name_decrypt(self, file_name_md5):
+    def file_name_md5_decrypt(self, file_name_md5):
         file_name_encrypt_str = self.file_name_md5_dict[file_name_md5]
         file_name = self.string_crypto.decrypt(file_name_encrypt_str)
         return file_name
@@ -323,38 +323,48 @@ class DirFileCrypto(object):
 
     # 加密input_dir文件夹内的所有文件到output_dir
     # encrypt_name控制是否加密文件或文件夹名
-    def encrypt(self, input_dir, output_dir, encrypt_name=True):
+    # name_md5控制是否用md5值作为文件名
+    def encrypt(self, input_dir, output_dir, encrypt_name=True, name_md5=False):
         self.crypto_status = True
         self.stop_flag = False
         self.read_count = 0
         if encrypt_name:
-            self.dir_handle(input_dir, output_dir, self.file_crypto.encrypt, self.file_name_encrypt)
-            # 保存文件名MD5值字典
-            if not self.config_file:
-                input_dir_name = os.path.basename(os.path.abspath(input_dir))
-                encrypt_config_name = self.file_name_encrypt(input_dir_name) + ".json"
-                self.config_file = os.path.join(os.path.dirname(os.path.abspath(input_dir)), encrypt_config_name)
-            with open(self.config_file, "w") as f:
-                json.dump(self.file_name_md5_dict, f)
+            # 使用md5值来做加密后的文件名，文件夹内名称的md5对应表存在json文件中
+            if name_md5:
+                self.dir_handle(input_dir, output_dir, self.file_crypto.encrypt, self.file_name_md5_encrypt)
+                # 保存文件名MD5值字典
+                if not self.config_file:
+                    input_dir_name = os.path.basename(os.path.abspath(input_dir))
+                    encrypt_config_name = self.file_name_md5_encrypt(input_dir_name) + ".json"
+                    self.config_file = os.path.join(os.path.dirname(os.path.abspath(input_dir)), encrypt_config_name)
+                with open(self.config_file, "w") as f:
+                    json.dump(self.file_name_md5_dict, f)
+            # 使用StringCrypto加密文件名
+            else:
+                self.dir_handle(input_dir, output_dir, self.file_crypto.encrypt, self.string_crypto.encrypt)
         else:
             self.dir_handle(input_dir, output_dir, self.file_crypto.encrypt, lambda name: name)
         self.crypto_status = False
 
     # 解密input_dir文件夹内的所有文件到output_dir
     # decrypt_name控制是否加密文件或文件夹名
-    def decrypt(self, input_dir, output_dir, decrypt_name=True):
+    # name_md5控制是否用md5值作为文件名
+    def decrypt(self, input_dir, output_dir, decrypt_name=True, name_md5=False):
         self.crypto_status = True
         self.stop_flag = False
         self.read_count = 0
         if decrypt_name:
-            # 读取文件名MD5值字典
-            if not self.config_file:
-                input_dir_name = os.path.basename(os.path.abspath(input_dir))
-                config_name = input_dir_name + ".json"
-                self.config_file = os.path.join(os.path.dirname(os.path.abspath(input_dir)), config_name)
-            with open(self.config_file, "r") as f:
-                self.file_name_md5_dict = json.load(f)
-            self.dir_handle(input_dir, output_dir, self.file_crypto.decrypt, self.file_name_decrypt)
+            if name_md5:
+                # 读取文件名MD5值字典
+                if not self.config_file:
+                    input_dir_name = os.path.basename(os.path.abspath(input_dir))
+                    config_name = input_dir_name + ".json"
+                    self.config_file = os.path.join(os.path.dirname(os.path.abspath(input_dir)), config_name)
+                with open(self.config_file, "r") as f:
+                    self.file_name_md5_dict = json.load(f)
+                self.dir_handle(input_dir, output_dir, self.file_crypto.decrypt, self.file_name_md5_decrypt)
+            else:
+                self.dir_handle(input_dir, output_dir, self.file_crypto.decrypt, self.string_crypto.decrypt)
         else:
             self.dir_handle(input_dir, output_dir, self.file_crypto.decrypt, lambda name: name)
         self.crypto_status = False
@@ -386,12 +396,13 @@ class ListCrypto(DirFileCrypto):
 
     # 加密input_list内的所有文件或文件夹到output_dir
     # encrypt_name控制是否加密文件或文件夹名
-    def encrypt(self, input_list, output_dir, encrypt_name=True):
+    # name_md5控制是否用md5值作为文件名，还未完成控制代码
+    def encrypt(self, input_list, output_dir, encrypt_name=True, name_md5=False):
         self.crypto_status = True
         self.stop_flag = False
         self.read_count = 0
         if encrypt_name:
-            self.list_handle(input_list, output_dir, self.file_crypto.encrypt, self.file_name_encrypt)
+            self.list_handle(input_list, output_dir, self.file_crypto.encrypt, self.file_name_md5_encrypt)
             # 保存文件名MD5值字典
             with open(self.config_file, "w") as f:
                 json.dump(self.file_name_md5_dict, f)
@@ -401,7 +412,8 @@ class ListCrypto(DirFileCrypto):
 
     # 解密input_list内的所有文件或文件夹到output_dir
     # decrypt_name控制是否加密文件或文件夹名
-    def decrypt(self, input_list, output_dir, decrypt_name=True):
+    # name_md5控制是否用md5值作为文件名，还未完成控制代码
+    def decrypt(self, input_list, output_dir, decrypt_name=True, name_md5=False):
         self.crypto_status = True
         self.stop_flag = False
         self.read_count = 0
@@ -409,7 +421,7 @@ class ListCrypto(DirFileCrypto):
             # 读取文件名MD5值字典
             with open(self.config_file, "r") as f:
                 self.file_name_md5_dict = json.load(f)
-            self.list_handle(input_list, output_dir, self.file_crypto.decrypt, self.file_name_decrypt)
+            self.list_handle(input_list, output_dir, self.file_crypto.decrypt, self.file_name_md5_decrypt)
         else:
             self.list_handle(input_list, output_dir, self.file_crypto.decrypt, lambda name: name)
         self.crypto_status = False

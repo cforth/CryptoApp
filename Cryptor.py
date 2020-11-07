@@ -449,8 +449,7 @@ class Window(ttk.Frame):
         update_task_length_thread = Thread(target=self.update_task_now_length, args=(self.crypto_task, max_length,))
         update_process_thread = Thread(target=self.update_process_bar, args=(max_length,))
         try:
-            # CBC模式下，不需要对文件夹名字进行预先解密
-            if is_decrypt_name and self.cryptModeOption == "ECB":
+            if is_decrypt_name:
                 output_path = os.path.join(output_dir_path, crypto_algorithm.StringCrypto(password).decrypt(os.path.split(dir_path)[1]))
             else:
                 output_path = os.path.join(output_dir_path, os.path.split(dir_path)[1])
