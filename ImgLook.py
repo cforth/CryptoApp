@@ -5,7 +5,8 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.filedialog as filedialog
 import tkinter.messagebox as tkmessagebox
-from libs.CFCrypto import ByteCrypto, StringCrypto
+import libs.CFCrypto as CFCrypto
+import libs.CFCryptoX as CFCryptoX
 from libs.CFCanvas import CFCanvas
 from libs.Util import set_combobox_item
 from libs.Util import IMG_EXT_LIST
@@ -17,61 +18,68 @@ logging.basicConfig(level=logging.INFO)
 class Window(ttk.Frame):
     def __init__(self, master=None, **kwargs):
         super().__init__(master, padding=2)
+        # 选择使用哪种加密模式，ECB或CBC
+        self.cryptModeOption = tk.StringVar()
+        self.cryptModeCombobox = ttk.Combobox(self, width=10, textvariable=self.cryptModeOption)
+        self.cryptModeCombobox.grid(row=0, column=0, sticky=('w', 'e'))
+        self.cryptModeCombobox.state(('readonly',))
+        self.cryptModeCombobox.config(values=["ECB", "CBC"])
+        set_combobox_item(self.cryptModeCombobox, "ECB", True)
         self.cryptoOptionCombobox = ttk.Combobox(self, state="readonly", values=["解密文件", "不需解密", "解密保名"], width=10)
         self.cryptoOption = tk.StringVar()
         self.cryptoOptionCombobox['textvariable'] = self.cryptoOption
-        self.cryptoOptionCombobox.grid(sticky=('w', 'e'), row=0, column=0)
+        self.cryptoOptionCombobox.grid(sticky=('w', 'e'), row=0, column=1)
         self.passwordEntry = tk.Entry(self, show="*", width=40)
         self.password = tk.StringVar()
         self.passwordEntry['textvariable'] = self.password
-        self.passwordEntry.grid(sticky=('w', 'e'), row=0, column=1)
+        self.passwordEntry.grid(sticky=('w', 'e'), row=0, column=2)
         self.pageOptionCombobox = ttk.Combobox(self, state="readonly", values=["单页", "双页"], width=10)
         self.pageOption = tk.StringVar()
         self.pageOptionCombobox['textvariable'] = self.pageOption
-        self.pageOptionCombobox.grid(sticky=('w', 'e'), row=0, column=2)
+        self.pageOptionCombobox.grid(sticky=('w', 'e'), row=0, column=3)
         self.orderOptionCombobox = ttk.Combobox(self, state="readonly", values=["左开", "右开"], width=10)
         self.orderOption = tk.StringVar()
         self.orderOptionCombobox['textvariable'] = self.orderOption
-        self.orderOptionCombobox.grid(sticky=('w', 'e'), row=0, column=3)
+        self.orderOptionCombobox.grid(sticky=('w', 'e'), row=0, column=4)
         self.fileFromButton = ttk.Button(self, text="选择文件", width=10)
-        self.fileFromButton.grid(sticky=('w', 'e'), row=0, column=4)
+        self.fileFromButton.grid(sticky=('w', 'e'), row=0, column=5)
         self.fileFromButton['command'] = self.file_from_button_callback
         self.refreshButton = ttk.Button(self, text="重新加载", width=10)
-        self.refreshButton.grid(sticky=('w', 'e'), row=0, column=5)
+        self.refreshButton.grid(sticky=('w', 'e'), row=0, column=6)
         self.refreshButton['command'] = self.refresh_button_callback
         self.imgCanvas = CFCanvas(500, 500, self)
-        self.imgCanvas.grid(sticky=('w', 'e', 'n', 's'), row=1, column=0, columnspan=6)
+        self.imgCanvas.grid(sticky=('w', 'e', 'n', 's'), row=1, column=0, columnspan=7)
         self.imgSizeNameLabel = tk.Label(self, text="调整大小", width=10)
         self.imgSizeNameLabel.grid(sticky=('e',), row=2, column=0)
         self.imgSizeScale = ttk.Scale(self, orient="horizontal", from_=1, to=100)
-        self.imgSizeScale.grid(sticky=('w', 'e'), row=2, column=1)
+        self.imgSizeScale.grid(sticky=('w', 'e'), row=2, column=1, columnspan=2)
         self.imgSizeScale.bind('<ButtonRelease-1>', self.set_img_size)
         self.imgSizeScale.bind('<B1-Motion>', self.set_img_size_info)
         self.imgSizeInfoLabel = tk.Label(self, width=10)
         self.imgSizeInfo = tk.StringVar()
         self.imgSizeInfoLabel['textvariable'] = self.imgSizeInfo
-        self.imgSizeInfoLabel.grid(sticky=('w', 'e'), row=2, column=2)
+        self.imgSizeInfoLabel.grid(sticky=('w', 'e'), row=2, column=3)
         self.prevImgButton = ttk.Button(self, text="<")
-        self.prevImgButton.grid(sticky=('w', 'n', 's'), row=2, column=3)
+        self.prevImgButton.grid(sticky=('w', 'n', 's'), row=2, column=4)
         self.prevImgButton['command'] = self.prev_img_button_callback
         self.nextImgButton = ttk.Button(self, text=">")
-        self.nextImgButton.grid(sticky=('w', 'n', 's'), row=2, column=4)
+        self.nextImgButton.grid(sticky=('w', 'n', 's'), row=2, column=5)
         self.nextImgButton['command'] = self.next_img_button_callback
         self.rotateImgButton = ttk.Button(self, text="旋转")
-        self.rotateImgButton.grid(sticky=('w',), row=2, column=5)
+        self.rotateImgButton.grid(sticky=('w',), row=2, column=6)
         self.rotateImgButton['command'] = self.rotate_img_button_callback
         self.imgInfoLabel = tk.Label(self, text="图片信息")
         self.imgInfo = tk.StringVar()
         self.imgInfoLabel['textvariable'] = self.imgInfo
-        self.imgInfoLabel.grid(sticky=('w',), row=3, column=0, columnspan=2)
+        self.imgInfoLabel.grid(sticky=('w',), row=3, column=1)
         self.jumpPageNumberLabel = tk.Label(self, text="跳转页码:")
-        self.jumpPageNumberLabel.grid(sticky=('e',), row=3, column=3)
+        self.jumpPageNumberLabel.grid(sticky=('e',), row=3, column=4)
         self.jumpPageNumberEntry = tk.Entry(self, width=10)
         self.jumpPageNumber = tk.StringVar()
         self.jumpPageNumberEntry['textvariable'] = self.jumpPageNumber
-        self.jumpPageNumberEntry.grid(sticky=('w', 'e'), row=3, column=4)
+        self.jumpPageNumberEntry.grid(sticky=('w', 'e'), row=3, column=5)
         self.jumpPageNumberButton = ttk.Button(self, text="GO", width=10)
-        self.jumpPageNumberButton.grid(sticky=('w', 'e'), row=3, column=5)
+        self.jumpPageNumberButton.grid(sticky=('w', 'e'), row=3, column=6)
         self.jumpPageNumberButton['command'] = self.jump_page_callback
 
         # 存储图片地址列表，用于前后翻页
@@ -98,13 +106,20 @@ class Window(ttk.Frame):
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=(tk.N, tk.S, tk.E, tk.W))
-        self.columnconfigure(1, weight=1)
+        self.columnconfigure(2, weight=1)
         self.rowconfigure(1, weight=1)
 
         # 保存传入的初始参数，如果传入参数则直接打开图片
         self.kwargs = dict(**kwargs)
         if self.kwargs:
             self.open_img(**self.kwargs)
+
+    # 选择加密解密使用的模式
+    def choose_crypt_mode(self):
+        if self.cryptModeOption.get() == "ECB":
+            return CFCrypto
+        elif self.cryptModeOption.get() == "CBC":
+            return CFCryptoX
 
     # 跳转到指定页码
     def jump_page_callback(self, event=None):
@@ -144,6 +159,7 @@ class Window(ttk.Frame):
 
     # 根据图片路径，将当前文件夹内所有图片保存在图片列表，用于前后翻页显示
     def set_img_list(self):
+        crypto_algorithm = self.choose_crypt_mode()
         img_dir_path = self.current_img_path[:self.current_img_path.rindex("/") + 1]
         crypto_option = self.cryptoOption.get()
         if crypto_option == "解密文件":
@@ -152,7 +168,7 @@ class Window(ttk.Frame):
             decrypt_img_name_list = []
             for img_name in os.listdir(img_dir_path):
                 try:
-                    decrypt_img_name = StringCrypto(self.password.get()).decrypt(img_name)
+                    decrypt_img_name = crypto_algorithm.StringCrypto(self.password.get()).decrypt(img_name)
                     if os.path.splitext(decrypt_img_name.lower())[1][1:] in IMG_EXT_LIST:
                         decrypt_img_name_list.append(decrypt_img_name)
                 except Exception as e:
@@ -160,7 +176,7 @@ class Window(ttk.Frame):
             # 将解密后的图片名称列表排序，再加密后放入img_list中，用于前后翻页顺序显示
             decrypt_img_name_list.sort()
             for decrypt_img_name in decrypt_img_name_list:
-                img_name = StringCrypto(self.password.get()).encrypt(decrypt_img_name)
+                img_name = crypto_algorithm.StringCrypto(self.password.get()).encrypt(decrypt_img_name)
                 self.img_list.append(os.path.join(img_dir_path, img_name))
 
         elif crypto_option == "解密保名" or crypto_option == "不需解密":
@@ -169,8 +185,9 @@ class Window(ttk.Frame):
 
     # 解密字符串方法
     def decrypt_string(self, str):
+        crypto_algorithm = self.choose_crypt_mode()
         try:
-            decrypt_str = StringCrypto(self.password.get()).decrypt(str)
+            decrypt_str = crypto_algorithm.StringCrypto(self.password.get()).decrypt(str)
         except Exception as e:
             logging.error("Decrypt img name error!")
             decrypt_str = ""
@@ -183,6 +200,7 @@ class Window(ttk.Frame):
 
         if crypto_option == "解密文件":
             img_name = self.decrypt_string(os.path.basename(self.current_img_path))
+            print(img_name)
         else:
             img_name = os.path.basename(self.current_img_path)
 
@@ -343,19 +361,22 @@ class Window(ttk.Frame):
 
     # 加密静态图片显示
     def crypto_img_show(self, img_path):
-        img_file_like = io.BytesIO(ByteCrypto(self.password.get()).decrypt(img_path))
+        crypto_algorithm = self.choose_crypt_mode()
+        img_file_like = io.BytesIO(crypto_algorithm.ByteCrypto(self.password.get()).decrypt(img_path))
         self.imgCanvas.default_img_show(img_file_like, self.rotate_angle, self.zoom_width)
 
     # 双页加密静态图片显示
     def crypto_double_img_show(self, img_path, next_img_path, order_option):
-        img_file_like = io.BytesIO(ByteCrypto(self.password.get()).decrypt(img_path))
-        next_img_file_like = io.BytesIO(ByteCrypto(self.password.get()).decrypt(next_img_path))
+        crypto_algorithm = self.choose_crypt_mode()
+        img_file_like = io.BytesIO(crypto_algorithm.ByteCrypto(self.password.get()).decrypt(img_path))
+        next_img_file_like = io.BytesIO(crypto_algorithm.ByteCrypto(self.password.get()).decrypt(next_img_path))
         self.imgCanvas.default_double_img_show(img_file_like, next_img_file_like, order_option,
                                                self.rotate_angle, self.zoom_width)
 
     # 加密动态图片显示
     def crypto_gif_show(self, img_path):
-        img_file_like = io.BytesIO(ByteCrypto(self.password.get()).decrypt(img_path))
+        crypto_algorithm = self.choose_crypt_mode()
+        img_file_like = io.BytesIO(crypto_algorithm.ByteCrypto(self.password.get()).decrypt(img_path))
         self.imgCanvas.default_gif_show(img_file_like, self.rotate_angle, self.zoom_width)
 
     def cancel_img(self):
@@ -364,6 +385,7 @@ class Window(ttk.Frame):
 
     # 根据不同图片类型和解密选项，显示图片
     def img_show(self, event=None):
+        crypto_algorithm = self.choose_crypt_mode()
         page_option = self.pageOption.get()
         self.imgCanvas.cancel_img()
         crypto_option = self.cryptoOption.get()
@@ -375,7 +397,7 @@ class Window(ttk.Frame):
         img_name = os.path.basename(self.current_img_path)
         if crypto_option == "解密文件":
             try:
-                decrypt_img_name = StringCrypto(self.password.get()).decrypt(img_name)
+                decrypt_img_name = crypto_algorithm.StringCrypto(self.password.get()).decrypt(img_name)
                 # 如果图片后缀不支持，则直接返回
                 if os.path.splitext(decrypt_img_name.lower())[1][1:] not in IMG_EXT_LIST:
                     tkmessagebox.showerror("错误", "文件格式不支持")

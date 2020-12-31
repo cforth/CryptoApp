@@ -127,14 +127,18 @@ class ByteCrypto(BaseCrypto):
         with open(file_path, 'rb') as f:
             original_data = f.read()
         self.cipher = self.gen_cipher()
-        return self.cipher.encrypt(pad(original_data, AES.block_size))
+        en_head_data = BinaryDataCrypto(self.password, iv_str=self.iv_str).encrypt(ENCRYPT_MARK)
+        return en_head_data + self.cipher.encrypt(pad(original_data, AES.block_size))
 
     def decrypt(self, file_path):
         if not os.path.exists(file_path):
             raise ValueError('Input file path not exists: %s ', file_path)
 
         with open(file_path, 'rb') as f:
+            head_data = f.read(BLOCK_SIZE)
             data_to_decrypt = f.read()
+        if not verify_password(self.password, self.iv_str, head_data):
+            return
         self.cipher = self.gen_cipher()
         return unpad(self.cipher.decrypt(data_to_decrypt), AES.block_size)
 
