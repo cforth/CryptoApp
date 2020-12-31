@@ -208,10 +208,10 @@ class Window(ttk.Frame):
         elif self.cryptOption.get() in ["解密", "解密预览"]:
             password = self.passwordEntry.get()
             if self.nameCryptoOptionCombobox.get() == "修改文件名":
-                p = Process(target=ImgLook.main_window, args=(file_select_path, password, "解密文件"))
+                p = Process(target=ImgLook.main_window, args=(file_select_path, password, "解密文件", self.cryptModeOption.get()))
                 p.start()
             elif self.nameCryptoOptionCombobox.get() == "保持文件名":
-                p = Process(target=ImgLook.main_window, args=(file_select_path, password, "解密保名"))
+                p = Process(target=ImgLook.main_window, args=(file_select_path, password, "解密保名", self.cryptModeOption.get()))
                 p.start()
 
     # 打开视频文件
