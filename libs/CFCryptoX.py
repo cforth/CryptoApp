@@ -9,31 +9,31 @@ from Crypto.Util.Padding import pad, unpad
 from libs.Key import gen_aes_key
 
 # 一个AES加密块的字节长度为16字节(128位)
-BLOCK_SIZE: int = 16
+BLOCK_SIZE = 16
 # 读写文件时，每次读写的字节数
-BUFFER_SIZE: int = 10 * 1024 * 1024
+BUFFER_SIZE = 10 * 1024 * 1024
 # 文件头加密标识，验证密码是否正确
-ENCRYPT_MARK: bytes = b'CF_CRYPTO_X'
+ENCRYPT_MARK = b'CF_CRYPTO_X'
 # 默认的初始化向量，经过urlsafe_b64encode编码后字符串
 DEFAULT_IV_STR = "UEr9si9EynusD5GGVuiqKw=="
 
 
 # 字符串MD5生成
-def get_str_md5(string: str, encoding='utf-8') -> str:
+def get_str_md5(string, encoding='utf-8'):
     my_hash = hashlib.md5()
     my_hash.update(string.encode(encoding))
     return my_hash.hexdigest()
 
 
 # 路径加密解密
-def folder_path_convert(folder_path: str, name_convert_func: callable) -> str:
+def folder_path_convert(folder_path, name_convert_func):
     name_list = re.split(r'[\\/]', folder_path)
     crypto_list = [name_convert_func(s) for s in name_list]
     return '/'.join(crypto_list)
 
 
 # 通过解密加密文件开头128个字节的块是否与加密标识相符，来判断密码是否正确
-def verify_password(password: str, iv: str, data_head: bytes) -> bool:
+def verify_password(password, iv, data_head):
     try:
         decrypt_head = BinaryDataCrypto(password, iv).decrypt(data_head)
         return True if decrypt_head[:len(ENCRYPT_MARK)] == ENCRYPT_MARK else False

@@ -14,7 +14,7 @@
     * chardet 3.0.4 +
     * Pillow 5.0.0 +
 * Windows(32位/64位)
-    * Windows XP及以上
+    * Windows 7及以上
 * Linux
     * python3-tk
 
